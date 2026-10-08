@@ -175,7 +175,7 @@
   }
   #home[hidden], #home [hidden] { display: none; }
   /* While the menu is open only the cube stays visible behind it */
-  body.home-open #top, body.home-open #moves, body.home-open #help, body.home-open #log, body.home-open #banner { visibility: hidden; }
+  body.home-open #top, body.home-open #moves, body.home-open #help, body.home-open #log, body.home-open #banner, body.home-open #chat { visibility: hidden; }
   .home-wrap { max-width: 920px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
   .home-title { margin: 8px 0 0; font-size: clamp(28px, 7vw, 44px); letter-spacing: .5px; text-align: center; text-wrap: balance; }
   .home-title .x { color: var(--x); } .home-title .o { color: var(--o); }
@@ -222,6 +222,29 @@
   .slot.lose .nm { color: var(--muted); text-decoration: line-through; }
   .slot.empty .nm { color: var(--muted); font-style: italic; }
   .slot.me .nm::after { content: attr(data-you); color: var(--muted); font-weight: 400; }
+  #moves[hidden] { display: none; }
+
+  /* Match chat: open for spectators, a quiet closed button for the two players */
+  #chat { position: fixed; left: 16px; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); z-index: 5; max-width: calc(100vw - 32px); }
+  #chat[hidden], #chat [hidden] { display: none; }
+  .chat-toggle { background: var(--panel); border-radius: 999px; padding: 6px 12px; font-size: 13px; color: var(--muted); }
+  .chat-badge { background: var(--gold); color: #1b1f2b; border-radius: 999px; padding: 1px 7px; font-size: 12px; font-weight: 700; margin-left: 4px; }
+  .chat-panel { width: 290px; max-width: 100%; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 8px; display: flex; flex-direction: column; gap: 6px; }
+  .chat-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 13px; }
+  .chat-head button { padding: 0 8px; font-size: 18px; line-height: 1.4; }
+  #chatList { list-style: none; margin: 0; padding: 0; max-height: min(34vh, 260px); overflow-y: auto; display: flex; flex-direction: column; gap: 4px; font-size: 13px; user-select: text; }
+  #chatList li { overflow-wrap: anywhere; line-height: 1.35; }
+  #chatList li b { color: var(--gold); margin-right: 4px; }
+  #chatList li.mine b { color: var(--o); }
+  .chat-form { display: flex; gap: 6px; }
+  .chat-form input { flex: 1; min-width: 0; font: inherit; font-size: 16px; padding: 6px 8px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg2); color: var(--text); user-select: text; }
+  .chat-form input:focus-visible { outline: 2px solid var(--gold); outline-offset: 1px; }
+  .chat-form button { padding: 6px 10px; }
+  .chat-note { margin: 0; font-size: 12px; color: var(--muted); }
+  .chat-note:empty { display: none; }
+  body.chat-open #help { display: none; }
+
+  .match .watch-btn { margin: 0 10px 8px; padding: 4px 12px; font-size: 13px; border-color: var(--gold); color: var(--gold); }
   .match .tag { font-size: 11px; color: var(--muted); padding: 0 10px 6px; }
 
   @media (max-width: 760px) {
@@ -279,6 +302,20 @@
 <aside id="log"><h2 data-i18n="movesLog">Zetten</h2><ol id="logList"></ol></aside>
 
 <div id="moves"></div>
+
+<div id="chat" hidden>
+  <button type="button" id="chatToggle" class="chat-toggle"><span data-i18n="chat">Chat</span> <span id="chatBadge" class="chat-badge" hidden></span></button>
+  <div id="chatPanel" class="chat-panel" hidden>
+    <div class="chat-head"><b data-i18n="spectatorChat"></b><button type="button" id="chatClose" data-i18n-aria="chatClose">×</button></div>
+    <ol id="chatList" aria-live="polite"></ol>
+    <p id="chatEmpty" class="chat-note" data-i18n="chatEmpty"></p>
+    <form id="chatForm" class="chat-form" autocomplete="off">
+      <input type="text" id="chatInput" maxlength="200" data-i18n-ph="chatPh" data-i18n-aria="chatPh">
+      <button type="submit" class="primary" data-i18n="send"></button>
+    </form>
+    <p id="chatNote" class="chat-note"></p>
+  </div>
+</div>
 
 <div id="banner" hidden><div><h2 id="bannerText"></h2><button id="bannerNew" data-i18n="playAgain">Opnieuw spelen</button></div></div>
 
@@ -469,6 +506,10 @@
       through: 'Je bent door! Wachten op je volgende tegenstander…', watching: 'Je kijkt mee.',
       orgKeepOpen: 'Jij bent de organisator. Houd deze pagina open, dan worden alle uitslagen verwerkt.',
       byeRound: 'vrije ronde', unknownYet: 'nog onbekend', tagCoin: 'gelijkspel, munt beslist', tagLive: 'bezig',
+      chat: 'Chat', spectatorChat: 'Chat van toeschouwers', chatPh: 'Typ een bericht…', chatClose: 'Chat sluiten', chatEmpty: 'Nog geen berichten.',
+      chatPlayersReadOnly: 'Alleen toeschouwers kunnen hier typen. Succes met je wedstrijd!', chatTooFast: 'Even rustig aan: wacht een seconde.', spectator: 'Toeschouwer',
+      watchBtn: 'Kijken', watchingBar: 'Je kijkt mee · {what} · {x} (X) tegen {o} (O)', matchWonBy: '{name} wint de wedstrijd.',
+      spectateHint: 'Wedstrijden die bezig zijn kun je bekijken: tik in het schema op Kijken.',
       tagLiveGame: 'bezig · game {n}', tagCoins: '{n}× munt bij gelijkspel', boSuffix: ' · best of {n}',
       prizeForWinner: 'Prijs voor de winnaar: <b>{reward}</b>', howItWorks: 'Speelwijze',
       howItWorksText: 'Knock-out: de winnaar gaat door, de verliezer ligt eruit. Halve finales zijn best of 3, de finale is best of 5. In een reeks wisselen de spelers per game wie met X begint. Gelijkspel in een game? Dan beslist een munt.',
@@ -553,6 +594,10 @@
       through: "You're through! Waiting for your next opponent…", watching: "You're watching.",
       orgKeepOpen: "You're the organizer. Keep this page open so all results get processed.",
       byeRound: 'bye', unknownYet: 'to be decided', tagCoin: 'draw, decided by coin', tagLive: 'in progress',
+      chat: 'Chat', spectatorChat: 'Spectator chat', chatPh: 'Type a message…', chatClose: 'Close chat', chatEmpty: 'No messages yet.',
+      chatPlayersReadOnly: 'Only spectators can type here. Good luck with your match!', chatTooFast: 'Slow down a little: wait a second.', spectator: 'Spectator',
+      watchBtn: 'Watch', watchingBar: 'Watching · {what} · {x} (X) vs {o} (O)', matchWonBy: '{name} wins the match.',
+      spectateHint: 'You can watch matches in progress: tap Watch in the bracket.',
       tagLiveGame: 'in progress · game {n}', tagCoins: '{n}× coin after a draw', boSuffix: ' · best of {n}',
       prizeForWinner: 'Prize for the winner: <b>{reward}</b>', howItWorks: 'How it works',
       howItWorksText: 'Knockout: the winner goes through, the loser is out. Semi-finals are best of 3, the final is best of 5. In a series the players take turns starting as X. A game ends in a draw? Then a coin decides.',
@@ -637,6 +682,10 @@
       through: 'Du bist weiter! Warte auf deinen nächsten Gegner…', watching: 'Du schaust zu.',
       orgKeepOpen: 'Du bist der Organisator. Lass diese Seite offen, damit alle Ergebnisse verarbeitet werden.',
       byeRound: 'Freilos', unknownYet: 'noch offen', tagCoin: 'unentschieden, Münze entschied', tagLive: 'läuft',
+      chat: 'Chat', spectatorChat: 'Zuschauer-Chat', chatPh: 'Nachricht schreiben…', chatClose: 'Chat schließen', chatEmpty: 'Noch keine Nachrichten.',
+      chatPlayersReadOnly: 'Nur Zuschauer können hier schreiben. Viel Glück bei deinem Spiel!', chatTooFast: 'Etwas langsamer: warte kurz.', spectator: 'Zuschauer',
+      watchBtn: 'Zuschauen', watchingBar: 'Du schaust zu · {what} · {x} (X) gegen {o} (O)', matchWonBy: '{name} gewinnt die Partie.',
+      spectateHint: 'Laufende Partien kannst du ansehen: Tippe im Turnierbaum auf Zuschauen.',
       tagLiveGame: 'läuft · Spiel {n}', tagCoins: '{n}× Münze bei Unentschieden', boSuffix: ' · Best of {n}',
       prizeForWinner: 'Preis für den Sieger: <b>{reward}</b>', howItWorks: 'Ablauf',
       howItWorksText: 'K.-o.-System: Der Gewinner kommt weiter, der Verlierer scheidet aus. Halbfinale Best of 3, Finale Best of 5. In einer Serie beginnen die Spieler abwechselnd als X. Ein Spiel endet unentschieden? Dann entscheidet eine Münze.',
@@ -1053,6 +1102,7 @@
   let names = {}; // id -> display name, refreshed on each render
   function seatLabel(p) {
     if (mode === 'p2p') {
+      if (net.kind === 'watch') return `${p === 'X' ? net.xName : net.oName} (${p})`;
       if (p === net.side) return `${t('you')} (${p})`;
       return `${net.kind === 'match' ? net.opponent : t('opponent')} (${p})`;
     }
@@ -1155,7 +1205,7 @@
       banner.hidden = false;
     } else banner.hidden = true;
 
-    const inMatch = mode === 'p2p' && net && net.kind === 'match';
+    const inMatch = mode === 'p2p' && net && (net.kind === 'match' || net.kind === 'watch');
     const mayReset = mode === 'local' || (mode === 'p2p' && net && net.kind === 'code' && netReady()) || (mode === 'online' && canWrite && (isSeated() || amOwner));
     newGameBtn.disabled = !mayReset;
     const bannerBtn = document.getElementById('bannerNew');
@@ -1166,6 +1216,9 @@
     renderNet();
     renderTourButton();
     renderInstall();
+    // Spectators can't move, so the move buttons make room for the chat.
+    movesEl.hidden = mode === 'p2p' && !!net && net.kind === 'watch';
+    renderChat();
   }
 
   function renderSeats() {
@@ -1291,10 +1344,9 @@
   }
   newGameBtn.addEventListener('click', newGame);
   document.getElementById('bannerNew').addEventListener('click', () => {
-    if (mode === 'p2p' && net && net.kind === 'match') {
-      if (nextGameReady()) playMatch(net.matchId);
-      else openTourPanel();
-    } else newGame();
+    if (mode === 'p2p' && net && net.kind === 'match' && nextGameReady()) playMatch(net.matchId);
+    else if (mode === 'p2p' && net && (net.kind === 'match' || net.kind === 'watch')) openTourPanel();
+    else newGame();
   });
 
   // Claiming a seat: take a short lease so two people clicking at once can't both get it.
@@ -1514,6 +1566,8 @@
   const publishGame = () => { if (net) relay.publish(net.topic + '/state', { t: 'state', game }, true); };
 
   function enterNet(cfg) {
+    // Keep the match chat when moving to the next game of the same match; drop it otherwise.
+    if (!((cfg.kind === 'match' || cfg.kind === 'watch') && cfg.matchId === chat.matchId)) leaveChat();
     leaveNet();
     relay.start();
     const n = net = { hosting: false, joined: false, opponentSeen: false, gotState: false, ...cfg };
@@ -1549,6 +1603,7 @@
   }
 
   function stopNet(keepNote) {
+    leaveChat();
     leaveNet();
     if (!keepNote) showNote('');
     mode = 'local';
@@ -1599,13 +1654,22 @@
     p2pStart.hidden = inNet;
     p2pInfo.hidden = !inNet;
     if (!inNet) return;
-    const isMatch = net.kind === 'match';
+    const isMatch = net.kind === 'match' || net.kind === 'watch';
     copyBtn.hidden = !(net.kind === 'code' && net.hosting);
     shareBtn.hidden = copyBtn.hidden || !canShareLinks();
     scheduleBtn.hidden = !isMatch;
     leaveBtn.hidden = isMatch;
     const side = `<b class="${net.side}-text">${net.side}</b>`;
-    if (isMatch) {
+    if (net.kind === 'watch') {
+      const loc = tour && findMatch(net.matchId);
+      let what = '', score = '';
+      if (loc) {
+        const m = loc.m, xs = xSlotOf(net.gameNo), os = xs === 'a' ? 'b' : 'a';
+        what = roundName(loc.r) + (m.bestOf > 1 ? t('gameOfBest', { n: net.gameNo + 1, b: m.bestOf }) : '');
+        if (m.bestOf > 1) score = t('score', { a: m.wins[xs], b: m.wins[os] });
+      }
+      p2pText.innerHTML = t('watchingBar', { what: escapeHtml(what), x: escapeHtml(net.xName), o: escapeHtml(net.oName) }) + escapeHtml(score);
+    } else if (isMatch) {
       const loc = tour && findMatch(net.matchId);
       let rn = '', score = '';
       if (loc) {
@@ -1756,7 +1820,7 @@
   function closeTourPanel() {
     tourPanel.hidden = true;
     // Back to the game while a tournament match is open, otherwise back to the menu.
-    if (!(mode === 'p2p' && net && net.kind === 'match') && homeSupported()) showHome();
+    if (!(mode === 'p2p' && net && (net.kind === 'match' || net.kind === 'watch')) && homeSupported()) showHome();
   }
 
   function subscribeTour() {
@@ -1776,7 +1840,7 @@
     if (tourCode) ['state', 'join', 'result'].forEach(s => relay.unsubscribe(tourTopic(s)));
     clearInterval(tourTimer);
     tourTimer = null;
-    if (mode === 'p2p' && net && net.kind === 'match') stopNet(true);
+    if (mode === 'p2p' && net && (net.kind === 'match' || net.kind === 'watch')) stopNet(true);
     tour = null; tourCode = null; tourRole = null; tourPlayerId = null; tourName = ''; pendingResults = {};
   }
 
@@ -1947,6 +2011,121 @@
     return !!loc && !loc.m.winner && loc.m.games.length > net.gameNo;
   }
 
+  // Spectating: anyone without a match to play right now can follow a live match, read-only.
+  // A spectator only listens to the match channel and never sends anything to it.
+  const canSpectate = m => !!(tour && tour.phase === 'running' && m.a && m.b && !m.winner &&
+    m.a !== tourPlayerId && m.b !== tourPlayerId && !myActiveMatch());
+
+  async function watchMatch(id) {
+    const loc = findMatch(id);
+    if (!loc || !canSpectate(loc.m)) return;
+    const m = loc.m, gameNo = m.games.length, xs = xSlotOf(gameNo);
+    enterNet({
+      kind: 'watch', code: tourCode, matchId: m.id, gameNo, side: null,
+      topic: tourTopic('m/' + m.id + '/g' + gameNo),
+      xName: playerName(m[xs]), oName: playerName(m[xs === 'a' ? 'b' : 'a']),
+    });
+    const n = net;
+    joinChat(m.id, 'watch');
+    closeTourPanel();
+    updateUI();
+    if (!(await waitFor(() => relay.connectedCount() > 0, CONNECT_TIMEOUT_MS))) { if (net === n) showNote(t('netErr')); return; }
+    if (net !== n) return;
+    n.joined = true;
+    updateUI();
+  }
+
+  // ---------- Match chat ----------
+  // One text chat per tournament match on tour/<code>/m/<id>/chat, kept for the whole series.
+  // Spectators read and write; the two players only read, behind a closed button that never pops open.
+  // Only messages sent while you are in the match are shown (nothing is stored).
+  const CHAT_MAX = 100, CHAT_GAP_MS = 1200;
+  const chat = { matchId: null, topic: null, role: null, msgs: [], unread: 0, open: false, lastSent: 0 };
+  const chatEl = document.getElementById('chat');
+  const chatPanel = document.getElementById('chatPanel');
+  const chatList = document.getElementById('chatList');
+  const chatInput = document.getElementById('chatInput');
+
+  function joinChat(matchId, role) {
+    if (chat.matchId !== matchId) {
+      leaveChat();
+      chat.matchId = matchId;
+      chat.topic = tourTopic('m/' + matchId + '/chat');
+      chat.msgs = [];
+      chat.unread = 0;
+      chatList.textContent = '';
+      relay.subscribe(chat.topic, receiveChat);
+    }
+    if (chat.role !== role) chat.open = role === 'watch'; // spectators start with it open, players closed
+    chat.role = role;
+    document.getElementById('chatNote').textContent = role === 'watch' ? '' : t('chatPlayersReadOnly');
+    renderChat();
+  }
+
+  function leaveChat() {
+    if (chat.topic) relay.unsubscribe(chat.topic);
+    Object.assign(chat, { matchId: null, topic: null, role: null, msgs: [], unread: 0, open: false });
+    chatList.textContent = '';
+    renderChat();
+  }
+
+  function receiveChat(p) {
+    if (p.t !== 'chat' || typeof p.text !== 'string') return;
+    const text = p.text.replace(/\s+/g, ' ').trim().slice(0, 200);
+    if (!text) return;
+    const msg = { name: cleanName(p.name) || t('spectator'), text, mine: p.from === clientId };
+    chat.msgs.push(msg);
+    if (chat.msgs.length > CHAT_MAX) { chat.msgs.shift(); chatList.firstChild && chatList.firstChild.remove(); }
+    const li = document.createElement('li');
+    if (msg.mine) li.className = 'mine';
+    const b = document.createElement('b');
+    b.textContent = msg.name;
+    li.append(b, msg.text); // text only: never interpreted as HTML
+    chatList.appendChild(li);
+    chatList.scrollTop = chatList.scrollHeight;
+    if (!chat.open && !msg.mine) chat.unread++;
+    renderChat();
+  }
+
+  function sendChat(e) {
+    e.preventDefault();
+    if (chat.role !== 'watch' || !chat.topic) return;
+    const text = chatInput.value.replace(/\s+/g, ' ').trim().slice(0, 200);
+    if (!text) return;
+    if (Date.now() - chat.lastSent < CHAT_GAP_MS) { document.getElementById('chatNote').textContent = t('chatTooFast'); return; }
+    chat.lastSent = Date.now();
+    document.getElementById('chatNote').textContent = '';
+    relay.publish(chat.topic, { t: 'chat', text, name: tourName || '' });
+    chatInput.value = '';
+  }
+
+  function renderChat() {
+    const inGame = mode === 'p2p' && net && (net.kind === 'match' || net.kind === 'watch') && chat.matchId === net.matchId;
+    chatEl.hidden = !inGame;
+    document.body.classList.toggle('chat-open', inGame && chat.open);
+    if (!inGame) return;
+    chatPanel.hidden = !chat.open;
+    document.getElementById('chatToggle').hidden = chat.open;
+    document.getElementById('chatForm').hidden = chat.role !== 'watch';
+    document.getElementById('chatEmpty').hidden = chat.msgs.length > 0;
+    if (chat.role !== 'watch') document.getElementById('chatNote').textContent = t('chatPlayersReadOnly');
+    const badge = document.getElementById('chatBadge');
+    badge.hidden = !chat.unread;
+    badge.textContent = chat.unread > 9 ? '9+' : String(chat.unread);
+    // On a phone the move buttons span the bottom; sit just above them while they are shown.
+    const narrow = window.innerWidth <= 760;
+    chatEl.style.bottom = narrow && !movesEl.hidden ? `calc(${movesEl.offsetHeight + 24}px + env(safe-area-inset-bottom, 0px))` : '';
+  }
+
+  document.getElementById('chatToggle').addEventListener('click', () => {
+    chat.open = true; chat.unread = 0; renderChat();
+    chatList.scrollTop = chatList.scrollHeight;
+    if (chat.role === 'watch') chatInput.focus();
+  });
+  document.getElementById('chatClose').addEventListener('click', () => { chat.open = false; renderChat(); });
+  document.getElementById('chatForm').addEventListener('submit', sendChat);
+  window.addEventListener('resize', renderChat);
+
   async function playMatch(id) {
     const loc = findMatch(id);
     if (!loc || loc.m.winner) return;
@@ -1958,6 +2137,7 @@
       opponent: playerName(m.a === tourPlayerId ? m.b : m.a),
     });
     const n = net;
+    joinChat(m.id, 'player');
     closeTourPanel();
     updateUI();
     if (!(await waitFor(() => relay.connectedCount() > 0, CONNECT_TIMEOUT_MS))) { if (net === n) showNote(t('netErr')); return; }
@@ -1972,11 +2152,19 @@
   function afterTourChange() {
     if (tour && tourRole === 'player' && tour.players.some(p => p.id === tourPlayerId)) saveTourRole();
     tourTick();
-    // A drawn game was settled by a coin: tell the two players who it picked.
-    if (mode === 'p2p' && net && net.kind === 'match') {
+    // A drawn game was settled by a coin: tell the two players (and spectators) who it picked.
+    if (mode === 'p2p' && net && (net.kind === 'match' || net.kind === 'watch')) {
       const loc = findMatch(net.matchId);
       const g = loc && loc.m.games[net.gameNo];
       if (g && g.how === 'coin') showNote(t('coinGame', { name: playerName(loc.m[g.winner]) }));
+      if (net.kind === 'watch' && loc) {
+        if (loc.m.winner) showNote(t('matchWonBy', { name: playerName(loc.m.winner) }));
+        else if (loc.m.games.length > net.gameNo) {
+          // The series goes on: after a moment to see the result, follow the next game.
+          const n = net;
+          setTimeout(() => { if (net === n) watchMatch(n.matchId); }, 3000);
+        }
+      }
     }
     if (!tourPanel.hidden && tourView === 'tour') renderTour();
     updateUI();
@@ -2048,7 +2236,8 @@
       else body = `<p class="big">${t('watching')}</p>`;
     }
     const orgNote = tourRole === 'org' && tour.phase !== 'done' ? `<p>${t('orgKeepOpen')}</p>` : '';
-    return `<div class="tp-card tp-me">${body}${orgNote}</div>`;
+    const spectate = tour.phase === 'running' && tour.rounds.some(rd => rd.some(canSpectate)) ? `<p>${t('spectateHint')}</p>` : '';
+    return `<div class="tp-card tp-me">${body}${spectate}${orgNote}</div>`;
   }
 
   function renderBracket() {
@@ -2076,7 +2265,8 @@
     };
     const bo = r => tour.rounds[r][0].bestOf > 1 ? t('boSuffix', { n: tour.rounds[r][0].bestOf }) : '';
     const cols = tour.rounds.map((rd, r) => `<div class="round"><h4>${escapeHtml(roundName(r) + bo(r))}</h4><div class="matches">${
-      rd.map(m => `<div class="match ${!m.winner && m.a && m.b ? 'live' : ''}">${slot(m, 'a')}${slot(m, 'b')}${tag(m) ? `<div class="tag">${escapeHtml(tag(m))}</div>` : ''}</div>`).join('')
+      rd.map(m => `<div class="match ${!m.winner && m.a && m.b ? 'live' : ''}">${slot(m, 'a')}${slot(m, 'b')}${tag(m) ? `<div class="tag">${escapeHtml(tag(m))}</div>` : ''}${
+        canSpectate(m) ? `<button type="button" class="watch-btn" data-act="watch" data-id="${m.id}">${t('watchBtn')}</button>` : ''}</div>`).join('')
     }</div></div>`).join('');
     return `<div class="bracket-scroll"><div class="bracket">${cols}</div></div>`;
   }
@@ -2125,6 +2315,7 @@
     else if (act === 'join') joinTour();
     else if (act === 'start') startTour();
     else if (act === 'play') playMatch(el.dataset.id);
+    else if (act === 'watch') watchMatch(el.dataset.id);
     else if (act === 'copy') copyText(tourCode, el, t('copyCode'));
     else if (act === 'share') shareLink('t', tourCode, el, t('shareLinkBtn'));
     else if (act === 'leave') { leaveTour(); tourView = 'menu'; setTourNote(''); renderTour(); updateUI(); }
@@ -2255,7 +2446,7 @@
   // Reports go to a private-ish ntfy.sh mailbox. A scheduled Claude task on the owner's computer reads them,
   // separates real bugs from noise, and prepares fixes that the owner approves before they go live.
   const BUG_TOPIC = 'kke-bugs-q7Vt2mZx9KpR4wLs8NcY';
-  const APP_VERSION = '20261008154935'; // filled in by build.ps1
+  const APP_VERSION = '20261008161415'; // filled in by build.ps1
   const BUG_WAIT_MS = 2 * 60 * 1000;
 
   function setBugMessages(error, ok) {
