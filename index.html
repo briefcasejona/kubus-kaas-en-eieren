@@ -507,7 +507,7 @@
       orgKeepOpen: 'Jij bent de organisator. Houd deze pagina open, dan worden alle uitslagen verwerkt.',
       byeRound: 'vrije ronde', unknownYet: 'nog onbekend', tagCoin: 'gelijkspel, munt beslist', tagLive: 'bezig',
       chat: 'Chat', spectatorChat: 'Chat van toeschouwers', chatPh: 'Typ een bericht…', chatClose: 'Chat sluiten', chatEmpty: 'Nog geen berichten.',
-      chatPlayersReadOnly: 'Alleen toeschouwers kunnen hier typen. Succes met je wedstrijd!', chatTooFast: 'Even rustig aan: wacht een seconde.', spectator: 'Toeschouwer',
+      chatPlayersReadOnly: 'Alleen toeschouwers kunnen hier typen. Succes met je wedstrijd!', chatTooFast: 'Je kunt één bericht per 5 seconden sturen. Nog {s} s.', spectator: 'Toeschouwer',
       watchBtn: 'Kijken', watchingBar: 'Je kijkt mee · {what} · {x} (X) tegen {o} (O)', matchWonBy: '{name} wint de wedstrijd.',
       spectateHint: 'Wedstrijden die bezig zijn kun je bekijken: tik in het schema op Kijken.',
       tagLiveGame: 'bezig · game {n}', tagCoins: '{n}× munt bij gelijkspel', boSuffix: ' · best of {n}',
@@ -595,7 +595,7 @@
       orgKeepOpen: "You're the organizer. Keep this page open so all results get processed.",
       byeRound: 'bye', unknownYet: 'to be decided', tagCoin: 'draw, decided by coin', tagLive: 'in progress',
       chat: 'Chat', spectatorChat: 'Spectator chat', chatPh: 'Type a message…', chatClose: 'Close chat', chatEmpty: 'No messages yet.',
-      chatPlayersReadOnly: 'Only spectators can type here. Good luck with your match!', chatTooFast: 'Slow down a little: wait a second.', spectator: 'Spectator',
+      chatPlayersReadOnly: 'Only spectators can type here. Good luck with your match!', chatTooFast: 'You can send one message every 5 seconds. {s} s to go.', spectator: 'Spectator',
       watchBtn: 'Watch', watchingBar: 'Watching · {what} · {x} (X) vs {o} (O)', matchWonBy: '{name} wins the match.',
       spectateHint: 'You can watch matches in progress: tap Watch in the bracket.',
       tagLiveGame: 'in progress · game {n}', tagCoins: '{n}× coin after a draw', boSuffix: ' · best of {n}',
@@ -683,7 +683,7 @@
       orgKeepOpen: 'Du bist der Organisator. Lass diese Seite offen, damit alle Ergebnisse verarbeitet werden.',
       byeRound: 'Freilos', unknownYet: 'noch offen', tagCoin: 'unentschieden, Münze entschied', tagLive: 'läuft',
       chat: 'Chat', spectatorChat: 'Zuschauer-Chat', chatPh: 'Nachricht schreiben…', chatClose: 'Chat schließen', chatEmpty: 'Noch keine Nachrichten.',
-      chatPlayersReadOnly: 'Nur Zuschauer können hier schreiben. Viel Glück bei deinem Spiel!', chatTooFast: 'Etwas langsamer: warte kurz.', spectator: 'Zuschauer',
+      chatPlayersReadOnly: 'Nur Zuschauer können hier schreiben. Viel Glück bei deinem Spiel!', chatTooFast: 'Du kannst alle 5 Sekunden eine Nachricht senden. Noch {s} s.', spectator: 'Zuschauer',
       watchBtn: 'Zuschauen', watchingBar: 'Du schaust zu · {what} · {x} (X) gegen {o} (O)', matchWonBy: '{name} gewinnt die Partie.',
       spectateHint: 'Laufende Partien kannst du ansehen: Tippe im Turnierbaum auf Zuschauen.',
       tagLiveGame: 'läuft · Spiel {n}', tagCoins: '{n}× Münze bei Unentschieden', boSuffix: ' · Best of {n}',
@@ -2039,8 +2039,23 @@
   // One text chat per tournament match on tour/<code>/m/<id>/chat, kept for the whole series.
   // Spectators read and write; the two players only read, behind a closed button that never pops open.
   // Only messages sent while you are in the match are shown (nothing is stored).
-  const CHAT_MAX = 100, CHAT_GAP_MS = 1200;
-  const chat = { matchId: null, topic: null, role: null, msgs: [], unread: 0, open: false, lastSent: 0 };
+  // One message per 5 seconds, counted per match (switching matches doesn't reset it).
+  const CHAT_MAX = 100, CHAT_GAP_MS = 5000;
+  const chat = { matchId: null, topic: null, role: null, msgs: [], unread: 0, open: false };
+  const chatLastSent = {}; // matchId -> time of this device's last message there
+  let chatCooldownTimer = null;
+  const chatWaitSeconds = () => Math.max(0, Math.ceil((CHAT_GAP_MS - (Date.now() - (chatLastSent[chat.matchId] || 0))) / 1000));
+
+  // The send button counts down while the 5 seconds run, then shows "Send" again.
+  function renderChatCooldown() {
+    const btn = document.querySelector('#chatForm button');
+    const s = chat.matchId ? chatWaitSeconds() : 0;
+    btn.disabled = s > 0;
+    btn.textContent = s > 0 ? `${t('send')} (${s})` : t('send');
+    clearTimeout(chatCooldownTimer);
+    if (s > 0) chatCooldownTimer = setTimeout(renderChatCooldown, 250);
+    else if (chat.role === 'watch') document.getElementById('chatNote').textContent = '';
+  }
   const chatEl = document.getElementById('chat');
   const chatPanel = document.getElementById('chatPanel');
   const chatList = document.getElementById('chatList');
@@ -2092,11 +2107,13 @@
     if (chat.role !== 'watch' || !chat.topic) return;
     const text = chatInput.value.replace(/\s+/g, ' ').trim().slice(0, 200);
     if (!text) return;
-    if (Date.now() - chat.lastSent < CHAT_GAP_MS) { document.getElementById('chatNote').textContent = t('chatTooFast'); return; }
-    chat.lastSent = Date.now();
+    const wait = chatWaitSeconds();
+    if (wait > 0) { document.getElementById('chatNote').textContent = t('chatTooFast', { s: wait }); renderChatCooldown(); return; }
+    chatLastSent[chat.matchId] = Date.now();
     document.getElementById('chatNote').textContent = '';
     relay.publish(chat.topic, { t: 'chat', text, name: tourName || '' });
     chatInput.value = '';
+    renderChatCooldown();
   }
 
   function renderChat() {
@@ -2107,6 +2124,7 @@
     chatPanel.hidden = !chat.open;
     document.getElementById('chatToggle').hidden = chat.open;
     document.getElementById('chatForm').hidden = chat.role !== 'watch';
+    if (chat.role === 'watch') renderChatCooldown();
     document.getElementById('chatEmpty').hidden = chat.msgs.length > 0;
     if (chat.role !== 'watch') document.getElementById('chatNote').textContent = t('chatPlayersReadOnly');
     const badge = document.getElementById('chatBadge');
@@ -2446,7 +2464,7 @@
   // Reports go to a private-ish ntfy.sh mailbox. A scheduled Claude task on the owner's computer reads them,
   // separates real bugs from noise, and prepares fixes that the owner approves before they go live.
   const BUG_TOPIC = 'kke-bugs-q7Vt2mZx9KpR4wLs8NcY';
-  const APP_VERSION = '20261008161415'; // filled in by build.ps1
+  const APP_VERSION = '20261008164801'; // filled in by build.ps1
   const BUG_WAIT_MS = 2 * 60 * 1000;
 
   function setBugMessages(error, ok) {
