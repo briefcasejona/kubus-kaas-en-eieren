@@ -187,6 +187,11 @@
   .home-actions { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
   .home-rules ol { margin: 0; padding-left: 20px; color: var(--muted); line-height: 1.55; display: flex; flex-direction: column; gap: 6px; }
   .home-rules b { color: var(--text); }
+  .home-top { display: flex; justify-content: flex-end; }
+  .lang-switch { display: flex; gap: 6px; background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: 4px; }
+  .lang-switch button { display: flex; align-items: center; gap: 6px; padding: 5px 10px 5px 6px; border-radius: 999px; border-color: transparent; background: transparent; font-size: 13px; font-weight: 600; color: var(--muted); }
+  .lang-switch button svg { width: 24px; height: 16px; border-radius: 3px; box-shadow: 0 0 0 1px rgba(255, 255, 255, .25); flex-shrink: 0; display: block; }
+  .lang-switch button[aria-pressed="true"] { background: var(--btn); border-color: var(--gold); color: var(--text); }
   .share-card { align-items: flex-start; }
   .qr { background: #fff; border-radius: 12px; padding: 12px; width: min(240px, 100%); aspect-ratio: 1; display: grid; place-items: center; color: #12151e; }
   .qr svg { width: 100%; height: auto; display: block; }
@@ -216,7 +221,7 @@
   .slot.win .nm { font-weight: 700; color: var(--gold); }
   .slot.lose .nm { color: var(--muted); text-decoration: line-through; }
   .slot.empty .nm { color: var(--muted); font-style: italic; }
-  .slot.me .nm::after { content: " (jij)"; color: var(--muted); font-weight: 400; }
+  .slot.me .nm::after { content: attr(data-you); color: var(--muted); font-weight: 400; }
   .match .tag { font-size: 11px; color: var(--muted); padding: 0 10px 6px; }
 
   @media (max-width: 760px) {
@@ -237,141 +242,150 @@
   <header>
     <h1>Kubus Kaas en Eieren <span class="x">X</span><span class="dot">·</span><span class="o">O</span></h1>
     <div class="head-actions">
-      <button type="button" id="menuBtn" hidden>Menu</button>
+      <button type="button" id="menuBtn" hidden data-i18n="menu">Menu</button>
       <button type="button" id="tourBtn" hidden>Toernooi</button>
-      <button type="button" id="newGame">Nieuw spel</button>
+      <button type="button" id="newGame" data-i18n="newGame">Nieuw spel</button>
     </div>
   </header>
-  <div id="status">Laden…</div>
+  <div id="status" data-i18n="loading">Laden…</div>
   <div id="seats" hidden>
     <div class="seat" id="seatX"><span class="mark X-text">X</span><span class="who"></span><button type="button"></button></div>
     <div class="seat" id="seatO"><span class="mark O-text">O</span><span class="who"></span><button type="button"></button></div>
   </div>
   <div id="p2p" hidden>
     <div class="p2p-row" id="p2pStart">
-      <button type="button" id="hostBtn">Online spel starten</button>
-      <span class="or">of</span>
-      <input id="joinCode" maxlength="6" placeholder="CODE" autocomplete="off" spellcheck="false" aria-label="Spelcode van je tegenstander">
-      <button type="button" id="joinBtn">Meedoen</button>
-      <button type="button" id="installBtn" hidden>App installeren</button>
+      <button type="button" id="hostBtn" data-i18n="hostOnline">Online spel starten</button>
+      <span class="or" data-i18n="or">of</span>
+      <input id="joinCode" maxlength="6" placeholder="CODE" autocomplete="off" spellcheck="false" aria-label="Spelcode van je tegenstander" data-i18n-aria="joinCodeAria">
+      <button type="button" id="joinBtn" data-i18n="join">Meedoen</button>
+      <button type="button" id="installBtn" hidden data-i18n="install">App installeren</button>
     </div>
     <div class="p2p-row" id="p2pInfo" hidden>
       <span id="p2pText"></span>
-      <button type="button" id="copyCode" hidden>Kopieer code</button>
-      <button type="button" id="shareLink" hidden>Deel link</button>
-      <button type="button" id="openSchedule" hidden>Schema</button>
-      <button type="button" id="leaveP2P">Stoppen</button>
+      <button type="button" id="copyCode" hidden data-i18n="copyCode">Kopieer code</button>
+      <button type="button" id="shareLink" hidden data-i18n="shareLinkBtn">Deel link</button>
+      <button type="button" id="openSchedule" hidden data-i18n="schedule">Schema</button>
+      <button type="button" id="leaveP2P" data-i18n="stop">Stoppen</button>
     </div>
   </div>
   <div id="note" hidden></div>
 </div>
 
 <aside id="help">
-  <b>Spelregels</b><br>
-  1. Klik op een leeg vakje om je teken te zetten.<br>
-  2. Draai daarna precies één keer aan de kubus: een buitenzijde (U D L R F B) of een middelste laag (M E S). Shift + toets = tegen de klok in.<br>
-  Bedacht? Zolang je nog niet gedraaid hebt, klik je een ander leeg vakje om je teken te verplaatsen, of je teken zelf om het terug te nemen.<br>
-  3. Drie op een rij op één zijde wint; dit wordt pas na het draaien gecontroleerd.<br><br>
-  <span id="modeHelp">Sleep ergens om de kubus van alle kanten te bekijken.</span>
+  <span data-i18n-html="helpHtml"></span>
+  <span id="modeHelp"></span>
 </aside>
 
-<aside id="log"><h2>Zetten</h2><ol id="logList"></ol></aside>
+<aside id="log"><h2 data-i18n="movesLog">Zetten</h2><ol id="logList"></ol></aside>
 
 <div id="moves"></div>
 
-<div id="banner" hidden><div><h2 id="bannerText"></h2><button id="bannerNew">Opnieuw spelen</button></div></div>
+<div id="banner" hidden><div><h2 id="bannerText"></h2><button id="bannerNew" data-i18n="playAgain">Opnieuw spelen</button></div></div>
 
 <div id="tourPanel" hidden><div class="tp-wrap" id="tourBody"></div></div>
 
 <div id="home" hidden>
   <div class="home-wrap">
+    <div class="home-top">
+      <div id="langSwitch" class="lang-switch" role="group" aria-label="Taal / Language / Sprache">
+        <button type="button" data-lang="nl" aria-label="Nederlands" title="Nederlands">
+          <svg viewBox="0 0 9 6" aria-hidden="true"><rect width="9" height="2" fill="#AE1C28"/><rect y="2" width="9" height="2" fill="#FFFFFF"/><rect y="4" width="9" height="2" fill="#21468B"/></svg><span>NL</span>
+        </button>
+        <button type="button" data-lang="en" aria-label="English" title="English">
+          <svg viewBox="0 0 60 30" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+            <clipPath id="ukClip"><path d="M30,15 h30 v15 z v15 h-30 z h-30 v-15 z v-15 h30 z"/></clipPath>
+            <rect width="60" height="30" fill="#012169"/>
+            <path d="M0,0 L60,30 M60,0 L0,30" stroke="#FFFFFF" stroke-width="6"/>
+            <path d="M0,0 L60,30 M60,0 L0,30" clip-path="url(#ukClip)" stroke="#C8102E" stroke-width="4"/>
+            <path d="M30,0 v30 M0,15 h60" stroke="#FFFFFF" stroke-width="10"/>
+            <path d="M30,0 v30 M0,15 h60" stroke="#C8102E" stroke-width="6"/>
+          </svg><span>EN</span>
+        </button>
+        <button type="button" data-lang="de" aria-label="Deutsch" title="Deutsch">
+          <svg viewBox="0 0 5 3" aria-hidden="true"><rect width="5" height="1" fill="#000000"/><rect y="1" width="5" height="1" fill="#DD0000"/><rect y="2" width="5" height="1" fill="#FFCE00"/></svg><span>DE</span>
+        </button>
+      </div>
+    </div>
     <h1 class="home-title">Kubus Kaas en Eieren <span class="x">X</span><span class="dot">·</span><span class="o">O</span></h1>
-    <p class="home-sub">Boter-kaas-en-eieren op een Rubiks kubus</p>
+    <p class="home-sub" data-i18n="subtitle"></p>
     <p class="tp-note" id="homeNote"></p>
 
     <div id="homeMain" class="home-grid">
       <section class="tp-card home-card">
-        <h3>Op dit apparaat</h3>
-        <p>Met z'n tweeën om de beurt op één scherm.</p>
-        <button type="button" class="primary" id="hLocal">Spelen</button>
+        <h3 data-i18n="localTitle"></h3>
+        <p data-i18n="localDesc"></p>
+        <button type="button" class="primary" id="hLocal" data-i18n="play"></button>
       </section>
       <section class="tp-card home-card" id="hOnlineCard">
-        <h3>Online 1-tegen-1</h3>
-        <p>Ieder op zijn eigen telefoon of computer. Start een spel en deel de code of link.</p>
-        <button type="button" class="primary" id="hHost">Spel starten</button>
-        <span class="or">of doe mee met een code</span>
+        <h3 data-i18n="onlineTitle"></h3>
+        <p data-i18n="onlineDesc"></p>
+        <button type="button" class="primary" id="hHost" data-i18n="startGame"></button>
+        <span class="or" data-i18n="orJoinCode"></span>
         <div class="row">
-          <input type="text" id="hCode" maxlength="6" placeholder="CODE" autocomplete="off" spellcheck="false" aria-label="Spelcode">
-          <button type="button" id="hJoin">Meedoen</button>
+          <input type="text" id="hCode" maxlength="6" placeholder="CODE" autocomplete="off" spellcheck="false" data-i18n-aria="codeAria">
+          <button type="button" id="hJoin" data-i18n="join"></button>
         </div>
       </section>
       <section class="tp-card home-card" id="hTourCard">
-        <h3>Toernooi</h3>
-        <p>Knock-out met 8 of 16 spelers. Halve finales best of 3, finale best of 5.</p>
-        <button type="button" class="primary" id="hTour">Naar het toernooi</button>
+        <h3 data-i18n="tour"></h3>
+        <p data-i18n="tourDesc"></p>
+        <button type="button" class="primary" id="hTour" data-i18n="toTour"></button>
       </section>
       <section class="tp-card home-card" id="hShareCard">
-        <h3>App delen</h3>
-        <p>Stuur de app naar een vriend, of laat een vriend naast je de QR-code scannen.</p>
-        <button type="button" class="primary" id="hShare">Deel de app</button>
-        <button type="button" id="hShareQr">Toon QR-code</button>
+        <h3 data-i18n="shareTitle"></h3>
+        <p data-i18n="shareDesc"></p>
+        <button type="button" class="primary" id="hShare" data-i18n="shareApp"></button>
+        <button type="button" id="hShareQr" data-i18n="showQr"></button>
       </section>
       <section class="tp-card home-card">
-        <h3>Spelregels</h3>
-        <p>Hoe zet je een teken, hoe draai je de kubus en wanneer win je?</p>
-        <button type="button" id="hRules">Bekijk de regels</button>
+        <h3 data-i18n="rulesTitle"></h3>
+        <p data-i18n="rulesDesc"></p>
+        <button type="button" id="hRules" data-i18n="viewRules"></button>
       </section>
       <section class="tp-card home-card" id="hBugCard">
-        <h3>Bug melden</h3>
-        <p>Werkt er iets niet zoals het hoort? Laat het weten; Claude bekijkt elke melding.</p>
-        <button type="button" id="hBug">Bug melden</button>
+        <h3 data-i18n="bugTitle"></h3>
+        <p data-i18n="bugDesc"></p>
+        <button type="button" id="hBug" data-i18n="bugTitle"></button>
       </section>
     </div>
 
     <section id="homeRules" class="tp-card home-rules" hidden>
-      <h3>Spelregels</h3>
-      <ol>
-        <li>Speler 1 speelt met <b>X</b>, speler 2 met <b>O</b>. Je mag op elk leeg vakje van de kubus je teken zetten, ook op de middelste.</li>
-        <li>Daarna draai je precies één keer aan de kubus: een buitenzijde (<b>U D L R F B</b>) of een middelste laag (<b>M E S</b>). Met Shift of de knoppen met ' draai je tegen de klok in.</li>
-        <li>Bedacht? Zolang je nog niet gedraaid hebt, klik je een ander leeg vakje om je teken te verplaatsen, of je teken zelf om het terug te nemen.</li>
-        <li>Drie op een rij op één zijde wint. Dat wordt pas gecontroleerd als de draai klaar is. Hebben beide spelers een rij? Dan wint wie net gedraaid heeft.</li>
-        <li>Alle 54 vakjes vol zonder rij is gelijkspel. In een toernooi beslist dan een munt.</li>
-        <li>Sleep over het scherm om de kubus van alle kanten te bekijken.</li>
-      </ol>
-      <div><button type="button" data-home="main">Terug</button></div>
+      <h3 data-i18n="rulesTitle"></h3>
+      <ol data-i18n-html="rulesHtml"></ol>
+      <div><button type="button" data-home="main" data-i18n="back"></button></div>
     </section>
 
     <section id="homeShare" class="tp-card share-card" hidden>
-      <h3>App delen</h3>
-      <p>Laat je vriend deze code scannen met de camera van de telefoon. Daarna kan de app geïnstalleerd worden via "App installeren" of "Zet op beginscherm".</p>
-      <div class="qr" id="shareQr" role="img" aria-label="QR-code met de link naar de app"></div>
+      <h3 data-i18n="shareTitle"></h3>
+      <p data-i18n="shareIntro"></p>
+      <div class="qr" id="shareQr" role="img" data-i18n-aria="qrAria"></div>
       <p class="share-link"><span id="shareUrl"></span></p>
       <p class="ok-note" id="shareOk"></p>
       <div class="home-actions" style="justify-content:flex-start">
-        <button type="button" class="primary" id="shareSend">Deel de link</button>
-        <button type="button" id="shareCopy">Kopieer link</button>
-        <button type="button" data-home="main">Terug</button>
+        <button type="button" class="primary" id="shareSend" data-i18n="shareTheLink"></button>
+        <button type="button" id="shareCopy" data-i18n="copyLink"></button>
+        <button type="button" data-home="main" data-i18n="back"></button>
       </div>
     </section>
 
     <section id="homeBug" class="tp-card" hidden>
-      <h3>Bug melden</h3>
-      <p>Beschrijf zo precies mogelijk wat er misging. Claude bekijkt elke melding en lost echte fouten op. Zet er geen persoonlijke gegevens in.</p>
-      <label>Wat ging er mis?
-        <textarea id="bugText" maxlength="1000" rows="5" placeholder="Bijv. na een M-draai bleef mijn X op de verkeerde plek staan."></textarea></label>
-      <label>Wat deed je net daarvoor? (optioneel)
-        <textarea id="bugSteps" maxlength="500" rows="3" placeholder="Bijv. online spel, ik was O, net een vakje verplaatst."></textarea></label>
+      <h3 data-i18n="bugTitle"></h3>
+      <p data-i18n="bugIntro"></p>
+      <label><span data-i18n="bugWhat"></span>
+        <textarea id="bugText" maxlength="1000" rows="5" data-i18n-ph="bugWhatPh"></textarea></label>
+      <label><span data-i18n="bugSteps"></span>
+        <textarea id="bugSteps" maxlength="500" rows="3" data-i18n-ph="bugStepsPh"></textarea></label>
       <p class="tp-note" id="bugError"></p>
       <p class="ok-note" id="bugOk"></p>
       <div class="home-actions" style="justify-content:flex-start">
-        <button type="button" class="primary" id="bugSend">Versturen</button>
-        <button type="button" data-home="main">Terug</button>
+        <button type="button" class="primary" id="bugSend" data-i18n="send"></button>
+        <button type="button" data-home="main" data-i18n="back"></button>
       </div>
     </section>
 
     <div class="home-actions">
-      <button type="button" id="hInstall" hidden>App installeren</button>
-      <button type="button" id="hResume" hidden>Terug naar het spel</button>
+      <button type="button" id="hInstall" hidden data-i18n="install"></button>
+      <button type="button" id="hResume" hidden data-i18n="resume"></button>
     </div>
   </div>
 </div>
@@ -381,6 +395,280 @@
 <script>
 (() => {
   'use strict';
+
+  // ---------- Languages ----------
+  // Each device picks its own language (saved in this browser only). Nothing language-specific is ever
+  // sent to other players: shared game data holds marks, moves and names, and every device renders its own text.
+  const I18N = {
+    nl: {
+      language: 'Taal', menu: 'Menu', tour: 'Toernooi', newGame: 'Nieuw spel', loading: 'Laden…',
+      hostOnline: 'Online spel starten', or: 'of', joinCodeAria: 'Spelcode van je tegenstander', join: 'Meedoen',
+      install: 'App installeren', copyCode: 'Kopieer code', shareLinkBtn: 'Deel link', schedule: 'Schema', stop: 'Stoppen',
+      helpHtml: '<b>Spelregels</b><br>1. Klik op een leeg vakje om je teken te zetten.<br>2. Draai daarna precies één keer aan de kubus: een buitenzijde (U D L R F B) of een middelste laag (M E S). Shift + toets = tegen de klok in.<br>Bedacht? Zolang je nog niet gedraaid hebt, klik je een ander leeg vakje om je teken te verplaatsen, of je teken zelf om het terug te nemen.<br>3. Drie op een rij op één zijde wint; dit wordt pas na het draaien gecontroleerd.<br><br>',
+      modeHelpMenu: 'Via "Menu" kies je: samen op dit apparaat, online 1-tegen-1 of een toernooi. Sleep om de kubus te bekijken.',
+      modeHelpLocalOnly: 'Jullie spelen samen op dit apparaat. Sleep ergens om de kubus van alle kanten te bekijken.',
+      modeHelpOnline: 'Online: deel deze pagina met je tegenstander. Ieder kiest een plaats (X of O) en speelt op het eigen apparaat. Sleep om de kubus te bekijken.',
+      movesLog: 'Zetten', playAgain: 'Opnieuw spelen',
+      subtitle: 'Boter-kaas-en-eieren op een Rubiks kubus',
+      localTitle: 'Op dit apparaat', localDesc: "Met z'n tweeën om de beurt op één scherm.", play: 'Spelen',
+      onlineTitle: 'Online 1-tegen-1', onlineDesc: 'Ieder op de eigen telefoon of computer. Start een spel en deel de code of link.',
+      startGame: 'Spel starten', orJoinCode: 'of doe mee met een code', codeAria: 'Spelcode',
+      tourDesc: 'Knock-out met 8 of 16 spelers. Halve finales best of 3, finale best of 5.', toTour: 'Naar het toernooi',
+      shareTitle: 'App delen', shareDesc: 'Stuur de app naar een vriend, of laat een vriend naast je de QR-code scannen.',
+      shareApp: 'Deel de app', showQr: 'Toon QR-code',
+      rulesTitle: 'Spelregels', rulesDesc: 'Hoe zet je een teken, hoe draai je de kubus en wanneer win je?', viewRules: 'Bekijk de regels',
+      bugTitle: 'Bug melden', bugDesc: 'Werkt er iets niet zoals het hoort? Laat het weten; Claude bekijkt elke melding.',
+      rulesHtml: '<li>Speler 1 speelt met <b>X</b>, speler 2 met <b>O</b>. Je mag op elk leeg vakje van de kubus je teken zetten, ook op de middelste.</li><li>Daarna draai je precies één keer aan de kubus: een buitenzijde (<b>U D L R F B</b>) of een middelste laag (<b>M E S</b>). Met Shift of de knoppen met \' draai je tegen de klok in.</li><li>Bedacht? Zolang je nog niet gedraaid hebt, klik je een ander leeg vakje om je teken te verplaatsen, of je teken zelf om het terug te nemen.</li><li>Drie op een rij op één zijde wint. Dat wordt pas gecontroleerd als de draai klaar is. Hebben beide spelers een rij? Dan wint wie net gedraaid heeft.</li><li>Alle 54 vakjes vol zonder rij is gelijkspel. In een toernooi beslist dan een munt.</li><li>Sleep over het scherm om de kubus van alle kanten te bekijken.</li>',
+      back: 'Terug',
+      shareIntro: 'Laat je vriend deze code scannen met de camera van de telefoon. Daarna kan de app geïnstalleerd worden via "App installeren" of "Zet op beginscherm".',
+      qrAria: 'QR-code met de link naar de app', shareTheLink: 'Deel de link', copyLink: 'Kopieer link',
+      bugIntro: 'Beschrijf zo precies mogelijk wat er misging. Claude bekijkt elke melding en lost echte fouten op. Zet er geen persoonlijke gegevens in.',
+      bugWhat: 'Wat ging er mis?', bugWhatPh: 'Bijv. na een M-draai bleef mijn X op de verkeerde plek staan.',
+      bugSteps: 'Wat deed je net daarvoor? (optioneel)', bugStepsPh: 'Bijv. online spel, ik was O, net een vakje verplaatst.',
+      send: 'Versturen', resume: 'Terug naar het spel',
+      you: 'Jij', opponent: 'Tegenstander', player1: 'Speler 1', player2: 'Speler 2', playerOf: 'Speler {p}',
+      faceWhat: 'de {f}-zijde', sliceM: 'de middelste laag tussen L en R', sliceE: 'de middelste laag tussen U en D', sliceS: 'de middelste laag tussen F en B',
+      cw: 'met de klok mee', ccw: 'tegen de klok in', turnTitle: 'Draai {what} {dir}',
+      movesHint: "M, E, S = middelste lagen · Toetsen: U D L R F B M E S · Shift + toets = tegen de klok in (')",
+      connecting: 'Verbinden…', wins: '{who} wint!', draw: 'Gelijkspel!', turning: '{who}: draaien…',
+      connectingServers: 'Verbinden met de spelservers…', waitOpponentJoin: 'Wachten tot je tegenstander meedoet…',
+      otherPlacing: '{who} zet een teken…', otherTurning: '{who} draait aan de kubus…', waitSeat: 'Wachten tot iemand plaatsneemt als {p}',
+      yourPlace: '{who}: zet je teken', yourMove: '{who}: draai aan de kubus, of verplaats je teken',
+      nextGame: 'Volgende game', toBracket: 'Naar het schema',
+      free: 'vrij', youLower: 'jij', playAs: 'Speel als {p}', leaveSeat: 'Verlaat', releaseSeat: 'Vrijgeven',
+      viewOnly: 'Je kunt hier alleen meekijken. Vraag de eigenaar om je als Bewerker uit te nodigen om mee te spelen.',
+      tooFast: 'Even te snel achter elkaar. Probeer het over een paar seconden opnieuw.',
+      saveFailed: 'Opslaan lukte niet. Controleer je verbinding en probeer het opnieuw.',
+      seatBusy: 'Iemand anders kiest net een plaats. Probeer het zo opnieuw.', seatTaken: 'Die plaats is net ingenomen.',
+      loginToPlay: 'Log in om mee te spelen. Je kijkt nu alleen mee.', connLost: 'De verbinding met het spel is verbroken. Laad de pagina opnieuw.',
+      netErr: 'Geen verbinding met de spelservers. Controleer je internet (wifi of mobiele data). Sommige school- of werknetwerken blokkeren dit; probeer dan mobiele data.',
+      enterCode: 'Vul de code van 6 tekens in die je tegenstander ziet.',
+      gameNotFound: 'Geen spel gevonden met code {code}. Controleer de code en of je tegenstander op "Spel starten" heeft geklikt.',
+      gameOfBest: ' · game {n} (best of {b})', score: ' · stand {a}–{b}', youVs: 'jij ({side}) tegen {opp}',
+      hostConnected: 'Code {code} · tegenstander verbonden · jij bent {side}', hostWaiting: 'Geef deze code aan je tegenstander: {code}',
+      joinedGame: 'Verbonden met spel {code} · jij bent {side}', joiningGame: 'Verbinden met {code}…',
+      copied: 'Gekopieerd', shareTourText: 'Doe mee met mijn toernooi Kubus Kaas en Eieren! Code: {code}',
+      shareGameText: 'Speel Kubus Kaas en Eieren tegen me! Code: {code}',
+      shareAppText: 'Speel Kubus Kaas en Eieren met me: boter-kaas-en-eieren op een Rubiks kubus. Open de link en installeer de app:',
+      iosInstall: 'Tik in Safari onderaan op de deelknop (vierkantje met pijl) en kies "Zet op beginscherm".',
+      rounds: ['Finale', 'Halve finale', 'Kwartfinale', 'Achtste finale'], roundN: 'Ronde {n}',
+      needNameOrUncheck: 'Vul je naam in, of zet "Ik speel zelf mee" uit.', enterTourCode: 'Vul de toernooicode van 6 tekens in.',
+      enterName: 'Vul je naam in.', tourNotFound: 'Geen toernooi gevonden met code {code}. Controleer de code.',
+      coinGame: 'Gelijkspel: de munt gaf deze game aan {name}.', yourMatch: 'Jouw wedstrijd!',
+      connectingTour: 'Verbinden met het toernooi…',
+      orgInfo: 'Geef de code <code>{code}</code> aan de spelers. Zij openen dit spel, kiezen <b>Toernooi</b> → <b>Meedoen</b> en vullen hun naam in.',
+      notFull: 'Niet vol? Dan krijgen sommige spelers een vrije ronde en gaan ze direct door.',
+      startWith1: 'Start toernooi met 1 speler', startWithN: 'Start toernooi met {n} spelers',
+      waitingStart: 'Je doet mee als <b>{name}</b>. Wachten tot de organisator het toernooi start…', tourFull: 'Dit toernooi is vol.',
+      signingUp: 'Aanmelden als <b>{name}</b>…', playersCount: 'Spelers {n}/{size}', nobodyYet: 'Nog niemand', youTag: ' (jij)',
+      closeTourOrg: 'Toernooi sluiten op dit apparaat', leaveTour: 'Toernooi verlaten', champion: 'Kampioen: {name}', youExcl: ' (jij!)',
+      prize: 'Prijs: <b>{reward}</b>',
+      seriesInfo: 'Best of {bo}: wie het eerst {need} games wint, gaat door. Stand <b>{a}–{b}</b>.',
+      playGameN: 'Speel game {n}', playMatch: 'Speel je wedstrijd', vsLine: '{round}: jij tegen <b>{opp}</b>',
+      eliminated: 'Je bent uitgeschakeld.', keepFollowing: 'Je kunt het toernooi hier blijven volgen.',
+      through: 'Je bent door! Wachten op je volgende tegenstander…', watching: 'Je kijkt mee.',
+      orgKeepOpen: 'Jij bent de organisator. Houd deze pagina open, dan worden alle uitslagen verwerkt.',
+      byeRound: 'vrije ronde', unknownYet: 'nog onbekend', tagCoin: 'gelijkspel, munt beslist', tagLive: 'bezig',
+      tagLiveGame: 'bezig · game {n}', tagCoins: '{n}× munt bij gelijkspel', boSuffix: ' · best of {n}',
+      prizeForWinner: 'Prijs voor de winnaar: <b>{reward}</b>', howItWorks: 'Speelwijze',
+      howItWorksText: 'Knock-out: de winnaar gaat door, de verliezer ligt eruit. Halve finales zijn best of 3, de finale is best of 5. In een reeks wisselen de spelers per game wie met X begint. Gelijkspel in een game? Dan beslist een munt.',
+      organize: 'Toernooi organiseren', organizeDesc: 'Jij krijgt een code voor de spelers. Iedereen speelt op de eigen telefoon of computer; winnaars gaan door, verliezers liggen eruit.',
+      numPlayers: 'Aantal spelers', nPlayers: '{n} spelers', iPlay: 'Ik speel zelf mee', yourName: 'Jouw naam', namePh1: 'Bijv. Sam',
+      prizeOptional: 'Prijs voor de winnaar (optioneel)', prizePh: 'Bijv. een zak drop', createTour: 'Toernooi aanmaken',
+      joinTourTitle: 'Meedoen aan een toernooi', joinTourDesc: 'Vul de code van de organisator in en kies de naam waaronder je speelt.',
+      tourCode: 'Toernooicode', namePh2: 'Bijv. Robin',
+      linkCopiedPaste: 'Link gekopieerd. Plak hem in een bericht aan je vriend.', linkCopied: 'Link gekopieerd.',
+      qrLoading: 'QR-code laden…', qrFailed: 'De QR-code kan nu niet laden. Deel de link hieronder.',
+      bugTooShort: 'Beschrijf het probleem iets uitgebreider (minstens 15 tekens).',
+      bugWait: 'Je hebt net al een melding gestuurd. Probeer het over een paar minuten opnieuw.',
+      bugThanks: 'Bedankt! Claude bekijkt je melding.', bugBusy: 'Er worden nu te veel meldingen verstuurd. Probeer het later opnieuw.',
+      bugFailed: 'Versturen lukte niet. Controleer je internetverbinding en probeer het opnieuw.',
+    },
+    en: {
+      language: 'Language', menu: 'Menu', tour: 'Tournament', newGame: 'New game', loading: 'Loading…',
+      hostOnline: 'Start online game', or: 'or', joinCodeAria: "Your opponent's game code", join: 'Join',
+      install: 'Install app', copyCode: 'Copy code', shareLinkBtn: 'Share link', schedule: 'Bracket', stop: 'Stop',
+      helpHtml: '<b>Rules</b><br>1. Click an empty square to place your mark.<br>2. Then turn the cube exactly once: an outer face (U D L R F B) or a middle layer (M E S). Shift + key = counter-clockwise.<br>Changed your mind? Until you turn the cube, click another empty square to move your mark, or click the mark itself to take it back.<br>3. Three in a row on one face wins; this is only checked after the turn.<br><br>',
+      modeHelpMenu: 'Use "Menu" to choose: together on this device, online 1-on-1 or a tournament. Drag to look around the cube.',
+      modeHelpLocalOnly: 'You play together on this device. Drag anywhere to look at the cube from all sides.',
+      modeHelpOnline: 'Online: share this page with your opponent. Each picks a seat (X or O) and plays on their own device. Drag to look around the cube.',
+      movesLog: 'Moves', playAgain: 'Play again',
+      subtitle: "Tic-tac-toe on a Rubik's cube",
+      localTitle: 'On this device', localDesc: 'Two players taking turns on one screen.', play: 'Play',
+      onlineTitle: 'Online 1-on-1', onlineDesc: 'Each on your own phone or computer. Start a game and share the code or link.',
+      startGame: 'Start game', orJoinCode: 'or join with a code', codeAria: 'Game code',
+      tourDesc: 'Knockout with 8 or 16 players. Semi-finals best of 3, final best of 5.', toTour: 'Go to tournament',
+      shareTitle: 'Share the app', shareDesc: 'Send the app to a friend, or let a friend next to you scan the QR code.',
+      shareApp: 'Share the app', showQr: 'Show QR code',
+      rulesTitle: 'Rules', rulesDesc: 'How do you place a mark, turn the cube, and win?', viewRules: 'Read the rules',
+      bugTitle: 'Report a bug', bugDesc: "Something not working as it should? Let us know; Claude reviews every report.",
+      rulesHtml: '<li>Player 1 plays <b>X</b>, player 2 plays <b>O</b>. You may place your mark on any empty square of the cube, including the centres.</li><li>Then you turn the cube exactly once: an outer face (<b>U D L R F B</b>) or a middle layer (<b>M E S</b>). Hold Shift, or use the buttons with \', to turn counter-clockwise.</li><li>Changed your mind? Until you turn the cube, click another empty square to move your mark, or click the mark itself to take it back.</li><li>Three in a row on one face wins. This is only checked once the turn is finished. Both players have a row? Then the player who just turned wins.</li><li>All 54 squares filled without a row is a draw. In a tournament a coin flip decides.</li><li>Drag across the screen to look at the cube from all sides.</li>',
+      back: 'Back',
+      shareIntro: 'Let your friend scan this code with their phone camera. Then the app can be installed with "Install app" or "Add to Home Screen".',
+      qrAria: 'QR code with the link to the app', shareTheLink: 'Share the link', copyLink: 'Copy link',
+      bugIntro: "Describe as precisely as possible what went wrong. Claude reviews every report and fixes real bugs. Please don't include personal information.",
+      bugWhat: 'What went wrong?', bugWhatPh: 'E.g. after an M turn my X stayed in the wrong place.',
+      bugSteps: 'What were you doing just before? (optional)', bugStepsPh: 'E.g. online game, I was O, had just moved a mark.',
+      send: 'Send', resume: 'Back to the game',
+      you: 'You', opponent: 'Opponent', player1: 'Player 1', player2: 'Player 2', playerOf: 'Player {p}',
+      faceWhat: 'the {f} face', sliceM: 'the middle layer between L and R', sliceE: 'the middle layer between U and D', sliceS: 'the middle layer between F and B',
+      cw: 'clockwise', ccw: 'counter-clockwise', turnTitle: 'Turn {what} {dir}',
+      movesHint: "M, E, S = middle layers · Keys: U D L R F B M E S · Shift + key = counter-clockwise (')",
+      connecting: 'Connecting…', wins: '{who} wins!', draw: "It's a draw!", turning: '{who}: turning…',
+      connectingServers: 'Connecting to the game servers…', waitOpponentJoin: 'Waiting for your opponent to join…',
+      otherPlacing: '{who} is placing a mark…', otherTurning: '{who} is turning the cube…', waitSeat: 'Waiting for someone to take seat {p}',
+      yourPlace: '{who}: place your mark', yourMove: '{who}: turn the cube, or move your mark',
+      nextGame: 'Next game', toBracket: 'To the bracket',
+      free: 'free', youLower: 'you', playAs: 'Play as {p}', leaveSeat: 'Leave', releaseSeat: 'Free seat',
+      viewOnly: 'You can only watch here. Ask the owner to invite you as an Editor to play.',
+      tooFast: 'A bit too fast. Try again in a few seconds.',
+      saveFailed: "Saving didn't work. Check your connection and try again.",
+      seatBusy: 'Someone else is picking a seat right now. Try again in a moment.', seatTaken: 'That seat was just taken.',
+      loginToPlay: "Log in to play. You're only watching now.", connLost: 'The connection to the game was lost. Reload the page.',
+      netErr: "Can't reach the game servers. Check your internet (Wi-Fi or mobile data). Some school or work networks block this; try mobile data instead.",
+      enterCode: 'Enter the 6-character code your opponent sees.',
+      gameNotFound: 'No game found with code {code}. Check the code and whether your opponent tapped "Start game".',
+      gameOfBest: ' · game {n} (best of {b})', score: ' · score {a}–{b}', youVs: 'you ({side}) vs {opp}',
+      hostConnected: 'Code {code} · opponent connected · you are {side}', hostWaiting: 'Give this code to your opponent: {code}',
+      joinedGame: 'Connected to game {code} · you are {side}', joiningGame: 'Connecting to {code}…',
+      copied: 'Copied', shareTourText: 'Join my Kubus Kaas en Eieren tournament! Code: {code}',
+      shareGameText: 'Play Kubus Kaas en Eieren against me! Code: {code}',
+      shareAppText: "Play Kubus Kaas en Eieren with me: tic-tac-toe on a Rubik's cube. Open the link and install the app:",
+      iosInstall: 'In Safari, tap the share button at the bottom (square with an arrow) and choose "Add to Home Screen".',
+      rounds: ['Final', 'Semi-final', 'Quarter-final', 'Round of 16'], roundN: 'Round {n}',
+      needNameOrUncheck: 'Enter your name, or untick "I\'m playing too".', enterTourCode: 'Enter the 6-character tournament code.',
+      enterName: 'Enter your name.', tourNotFound: 'No tournament found with code {code}. Check the code.',
+      coinGame: 'Draw: the coin gave this game to {name}.', yourMatch: 'Your match!',
+      connectingTour: 'Connecting to the tournament…',
+      orgInfo: 'Give the code <code>{code}</code> to the players. They open this game, choose <b>Tournament</b> → <b>Join</b> and enter their name.',
+      notFull: 'Not full? Then some players get a bye and go straight through.',
+      startWith1: 'Start tournament with 1 player', startWithN: 'Start tournament with {n} players',
+      waitingStart: "You're in as <b>{name}</b>. Waiting for the organizer to start the tournament…", tourFull: 'This tournament is full.',
+      signingUp: 'Signing up as <b>{name}</b>…', playersCount: 'Players {n}/{size}', nobodyYet: 'Nobody yet', youTag: ' (you)',
+      closeTourOrg: 'Close tournament on this device', leaveTour: 'Leave tournament', champion: 'Champion: {name}', youExcl: ' (you!)',
+      prize: 'Prize: <b>{reward}</b>',
+      seriesInfo: 'Best of {bo}: the first to win {need} games goes through. Score <b>{a}–{b}</b>.',
+      playGameN: 'Play game {n}', playMatch: 'Play your match', vsLine: '{round}: you vs <b>{opp}</b>',
+      eliminated: "You're out.", keepFollowing: 'You can keep following the tournament here.',
+      through: "You're through! Waiting for your next opponent…", watching: "You're watching.",
+      orgKeepOpen: "You're the organizer. Keep this page open so all results get processed.",
+      byeRound: 'bye', unknownYet: 'to be decided', tagCoin: 'draw, decided by coin', tagLive: 'in progress',
+      tagLiveGame: 'in progress · game {n}', tagCoins: '{n}× coin after a draw', boSuffix: ' · best of {n}',
+      prizeForWinner: 'Prize for the winner: <b>{reward}</b>', howItWorks: 'How it works',
+      howItWorksText: 'Knockout: the winner goes through, the loser is out. Semi-finals are best of 3, the final is best of 5. In a series the players take turns starting as X. A game ends in a draw? Then a coin decides.',
+      organize: 'Organize a tournament', organizeDesc: 'You get a code for the players. Everyone plays on their own phone or computer; winners go through, losers are out.',
+      numPlayers: 'Number of players', nPlayers: '{n} players', iPlay: "I'm playing too", yourName: 'Your name', namePh1: 'E.g. Sam',
+      prizeOptional: 'Prize for the winner (optional)', prizePh: 'E.g. a bag of sweets', createTour: 'Create tournament',
+      joinTourTitle: 'Join a tournament', joinTourDesc: "Enter the organizer's code and choose the name you play under.",
+      tourCode: 'Tournament code', namePh2: 'E.g. Robin',
+      linkCopiedPaste: 'Link copied. Paste it into a message to your friend.', linkCopied: 'Link copied.',
+      qrLoading: 'Loading QR code…', qrFailed: "The QR code can't load right now. Share the link below.",
+      bugTooShort: 'Please describe the problem in a bit more detail (at least 15 characters).',
+      bugWait: 'You just sent a report. Try again in a few minutes.',
+      bugThanks: 'Thank you! Claude will look at your report.', bugBusy: 'Too many reports are being sent right now. Try again later.',
+      bugFailed: "Sending didn't work. Check your internet connection and try again.",
+    },
+    de: {
+      language: 'Sprache', menu: 'Menü', tour: 'Turnier', newGame: 'Neues Spiel', loading: 'Laden…',
+      hostOnline: 'Online-Spiel starten', or: 'oder', joinCodeAria: 'Spielcode deines Gegners', join: 'Beitreten',
+      install: 'App installieren', copyCode: 'Code kopieren', shareLinkBtn: 'Link teilen', schedule: 'Turnierbaum', stop: 'Beenden',
+      helpHtml: '<b>Spielregeln</b><br>1. Klicke auf ein leeres Feld, um dein Zeichen zu setzen.<br>2. Danach drehst du den Würfel genau einmal: eine Außenseite (U D L R F B) oder eine mittlere Schicht (M E S). Shift + Taste = gegen den Uhrzeigersinn.<br>Anders überlegt? Solange du noch nicht gedreht hast, klickst du ein anderes leeres Feld, um dein Zeichen zu verschieben, oder dein Zeichen selbst, um es zurückzunehmen.<br>3. Drei in einer Reihe auf einer Seite gewinnt; das wird erst nach dem Drehen geprüft.<br><br>',
+      modeHelpMenu: 'Über „Menü“ wählst du: zusammen auf diesem Gerät, online 1 gegen 1 oder ein Turnier. Ziehen, um den Würfel zu drehen.',
+      modeHelpLocalOnly: 'Ihr spielt zusammen auf diesem Gerät. Zieh irgendwo, um den Würfel von allen Seiten anzusehen.',
+      modeHelpOnline: 'Online: Teile diese Seite mit deinem Gegner. Jeder wählt einen Platz (X oder O) und spielt auf dem eigenen Gerät. Ziehen, um den Würfel anzusehen.',
+      movesLog: 'Züge', playAgain: 'Nochmal spielen',
+      subtitle: 'Tic-Tac-Toe auf einem Zauberwürfel',
+      localTitle: 'Auf diesem Gerät', localDesc: 'Zu zweit abwechselnd auf einem Bildschirm.', play: 'Spielen',
+      onlineTitle: 'Online 1 gegen 1', onlineDesc: 'Jeder auf dem eigenen Handy oder Computer. Starte ein Spiel und teile den Code oder Link.',
+      startGame: 'Spiel starten', orJoinCode: 'oder mit einem Code beitreten', codeAria: 'Spielcode',
+      tourDesc: 'K.-o.-System mit 8 oder 16 Spielern. Halbfinale Best of 3, Finale Best of 5.', toTour: 'Zum Turnier',
+      shareTitle: 'App teilen', shareDesc: 'Schick die App an einen Freund oder lass jemanden neben dir den QR-Code scannen.',
+      shareApp: 'App teilen', showQr: 'QR-Code zeigen',
+      rulesTitle: 'Spielregeln', rulesDesc: 'Wie setzt du ein Zeichen, drehst den Würfel und gewinnst?', viewRules: 'Regeln ansehen',
+      bugTitle: 'Fehler melden', bugDesc: 'Funktioniert etwas nicht richtig? Sag Bescheid; Claude prüft jede Meldung.',
+      rulesHtml: '<li>Spieler 1 spielt mit <b>X</b>, Spieler 2 mit <b>O</b>. Du darfst dein Zeichen auf jedes leere Feld des Würfels setzen, auch auf die Mittelfelder.</li><li>Danach drehst du den Würfel genau einmal: eine Außenseite (<b>U D L R F B</b>) oder eine mittlere Schicht (<b>M E S</b>). Mit Shift oder den Tasten mit \' drehst du gegen den Uhrzeigersinn.</li><li>Anders überlegt? Solange du noch nicht gedreht hast, klickst du ein anderes leeres Feld, um dein Zeichen zu verschieben, oder dein Zeichen selbst, um es zurückzunehmen.</li><li>Drei in einer Reihe auf einer Seite gewinnt. Das wird erst geprüft, wenn die Drehung fertig ist. Haben beide Spieler eine Reihe? Dann gewinnt, wer gerade gedreht hat.</li><li>Alle 54 Felder voll ohne Reihe ist unentschieden. Im Turnier entscheidet dann eine Münze.</li><li>Zieh über den Bildschirm, um den Würfel von allen Seiten anzusehen.</li>',
+      back: 'Zurück',
+      shareIntro: 'Lass deinen Freund diesen Code mit der Handykamera scannen. Danach lässt sich die App über „App installieren“ oder „Zum Home-Bildschirm“ installieren.',
+      qrAria: 'QR-Code mit dem Link zur App', shareTheLink: 'Link teilen', copyLink: 'Link kopieren',
+      bugIntro: 'Beschreibe möglichst genau, was schiefging. Claude prüft jede Meldung und behebt echte Fehler. Bitte keine persönlichen Daten angeben.',
+      bugWhat: 'Was ist schiefgegangen?', bugWhatPh: 'Z. B. nach einer M-Drehung blieb mein X an der falschen Stelle.',
+      bugSteps: 'Was hast du direkt davor gemacht? (optional)', bugStepsPh: 'Z. B. Online-Spiel, ich war O, hatte gerade ein Zeichen verschoben.',
+      send: 'Senden', resume: 'Zurück zum Spiel',
+      you: 'Du', opponent: 'Gegner', player1: 'Spieler 1', player2: 'Spieler 2', playerOf: 'Spieler {p}',
+      faceWhat: 'Die {f}-Seite', sliceM: 'Die mittlere Schicht zwischen L und R', sliceE: 'Die mittlere Schicht zwischen U und D', sliceS: 'Die mittlere Schicht zwischen F und B',
+      cw: 'im Uhrzeigersinn', ccw: 'gegen den Uhrzeigersinn', turnTitle: '{what} {dir} drehen',
+      movesHint: "M, E, S = mittlere Schichten · Tasten: U D L R F B M E S · Shift + Taste = gegen den Uhrzeigersinn (')",
+      connecting: 'Verbinden…', wins: '{who} gewinnt!', draw: 'Unentschieden!', turning: '{who}: dreht…',
+      connectingServers: 'Verbindung zu den Spielservern…', waitOpponentJoin: 'Warte, bis dein Gegner beitritt…',
+      otherPlacing: '{who} setzt ein Zeichen…', otherTurning: '{who} dreht den Würfel…', waitSeat: 'Warte, bis jemand Platz {p} nimmt',
+      yourPlace: '{who}: setze dein Zeichen', yourMove: '{who}: dreh den Würfel oder verschieb dein Zeichen',
+      nextGame: 'Nächstes Spiel', toBracket: 'Zum Turnierbaum',
+      free: 'frei', youLower: 'du', playAs: 'Als {p} spielen', leaveSeat: 'Verlassen', releaseSeat: 'Freigeben',
+      viewOnly: 'Du kannst hier nur zuschauen. Bitte den Besitzer, dich als Bearbeiter einzuladen, um mitzuspielen.',
+      tooFast: 'Etwas zu schnell hintereinander. Versuch es in ein paar Sekunden noch einmal.',
+      saveFailed: 'Speichern hat nicht geklappt. Prüfe deine Verbindung und versuch es noch einmal.',
+      seatBusy: 'Jemand anderes wählt gerade einen Platz. Versuch es gleich noch einmal.', seatTaken: 'Dieser Platz wurde gerade besetzt.',
+      loginToPlay: 'Melde dich an, um mitzuspielen. Du schaust gerade nur zu.', connLost: 'Die Verbindung zum Spiel ist abgebrochen. Lade die Seite neu.',
+      netErr: 'Keine Verbindung zu den Spielservern. Prüfe dein Internet (WLAN oder mobile Daten). Manche Schul- oder Firmennetze blockieren das; nutze dann mobile Daten.',
+      enterCode: 'Gib den 6-stelligen Code ein, den dein Gegner sieht.',
+      gameNotFound: 'Kein Spiel mit Code {code} gefunden. Prüfe den Code und ob dein Gegner auf „Spiel starten“ getippt hat.',
+      gameOfBest: ' · Spiel {n} (Best of {b})', score: ' · Stand {a}–{b}', youVs: 'du ({side}) gegen {opp}',
+      hostConnected: 'Code {code} · Gegner verbunden · du bist {side}', hostWaiting: 'Gib deinem Gegner diesen Code: {code}',
+      joinedGame: 'Mit Spiel {code} verbunden · du bist {side}', joiningGame: 'Verbinde mit {code}…',
+      copied: 'Kopiert', shareTourText: 'Mach mit bei meinem Kubus-Kaas-en-Eieren-Turnier! Code: {code}',
+      shareGameText: 'Spiel Kubus Kaas en Eieren gegen mich! Code: {code}',
+      shareAppText: 'Spiel Kubus Kaas en Eieren mit mir: Tic-Tac-Toe auf einem Zauberwürfel. Öffne den Link und installiere die App:',
+      iosInstall: 'Tippe in Safari unten auf die Teilen-Taste (Quadrat mit Pfeil) und wähle „Zum Home-Bildschirm“.',
+      rounds: ['Finale', 'Halbfinale', 'Viertelfinale', 'Achtelfinale'], roundN: 'Runde {n}',
+      needNameOrUncheck: 'Gib deinen Namen ein oder entferne das Häkchen bei „Ich spiele selbst mit“.', enterTourCode: 'Gib den 6-stelligen Turniercode ein.',
+      enterName: 'Gib deinen Namen ein.', tourNotFound: 'Kein Turnier mit Code {code} gefunden. Prüfe den Code.',
+      coinGame: 'Unentschieden: Die Münze gab dieses Spiel an {name}.', yourMatch: 'Dein Spiel!',
+      connectingTour: 'Verbindung zum Turnier…',
+      orgInfo: 'Gib den Spielern den Code <code>{code}</code>. Sie öffnen dieses Spiel, wählen <b>Turnier</b> → <b>Beitreten</b> und geben ihren Namen ein.',
+      notFull: 'Nicht voll? Dann bekommen einige Spieler ein Freilos und sind direkt weiter.',
+      startWith1: 'Turnier mit 1 Spieler starten', startWithN: 'Turnier mit {n} Spielern starten',
+      waitingStart: 'Du spielst mit als <b>{name}</b>. Warte, bis der Organisator das Turnier startet…', tourFull: 'Dieses Turnier ist voll.',
+      signingUp: 'Anmeldung als <b>{name}</b>…', playersCount: 'Spieler {n}/{size}', nobodyYet: 'Noch niemand', youTag: ' (du)',
+      closeTourOrg: 'Turnier auf diesem Gerät schließen', leaveTour: 'Turnier verlassen', champion: 'Sieger: {name}', youExcl: ' (du!)',
+      prize: 'Preis: <b>{reward}</b>',
+      seriesInfo: 'Best of {bo}: Wer zuerst {need} Spiele gewinnt, kommt weiter. Stand <b>{a}–{b}</b>.',
+      playGameN: 'Spiel {n} spielen', playMatch: 'Dein Spiel starten', vsLine: '{round}: du gegen <b>{opp}</b>',
+      eliminated: 'Du bist ausgeschieden.', keepFollowing: 'Du kannst das Turnier hier weiter verfolgen.',
+      through: 'Du bist weiter! Warte auf deinen nächsten Gegner…', watching: 'Du schaust zu.',
+      orgKeepOpen: 'Du bist der Organisator. Lass diese Seite offen, damit alle Ergebnisse verarbeitet werden.',
+      byeRound: 'Freilos', unknownYet: 'noch offen', tagCoin: 'unentschieden, Münze entschied', tagLive: 'läuft',
+      tagLiveGame: 'läuft · Spiel {n}', tagCoins: '{n}× Münze bei Unentschieden', boSuffix: ' · Best of {n}',
+      prizeForWinner: 'Preis für den Sieger: <b>{reward}</b>', howItWorks: 'Ablauf',
+      howItWorksText: 'K.-o.-System: Der Gewinner kommt weiter, der Verlierer scheidet aus. Halbfinale Best of 3, Finale Best of 5. In einer Serie beginnen die Spieler abwechselnd als X. Ein Spiel endet unentschieden? Dann entscheidet eine Münze.',
+      organize: 'Turnier organisieren', organizeDesc: 'Du bekommst einen Code für die Spieler. Alle spielen auf dem eigenen Handy oder Computer; Gewinner kommen weiter, Verlierer scheiden aus.',
+      numPlayers: 'Anzahl Spieler', nPlayers: '{n} Spieler', iPlay: 'Ich spiele selbst mit', yourName: 'Dein Name', namePh1: 'Z. B. Sam',
+      prizeOptional: 'Preis für den Sieger (optional)', prizePh: 'Z. B. eine Tüte Lakritz', createTour: 'Turnier erstellen',
+      joinTourTitle: 'Einem Turnier beitreten', joinTourDesc: 'Gib den Code des Organisators ein und wähle den Namen, unter dem du spielst.',
+      tourCode: 'Turniercode', namePh2: 'Z. B. Robin',
+      linkCopiedPaste: 'Link kopiert. Füge ihn in eine Nachricht an deinen Freund ein.', linkCopied: 'Link kopiert.',
+      qrLoading: 'QR-Code wird geladen…', qrFailed: 'Der QR-Code kann gerade nicht laden. Teile den Link unten.',
+      bugTooShort: 'Beschreibe das Problem etwas ausführlicher (mindestens 15 Zeichen).',
+      bugWait: 'Du hast gerade schon eine Meldung geschickt. Versuch es in ein paar Minuten noch einmal.',
+      bugThanks: 'Danke! Claude schaut sich deine Meldung an.', bugBusy: 'Gerade werden zu viele Meldungen gesendet. Versuch es später noch einmal.',
+      bugFailed: 'Senden hat nicht geklappt. Prüfe deine Internetverbindung und versuch es noch einmal.',
+    },
+  };
+  const LANGS = ['nl', 'en', 'de'];
+  function detectLang() {
+    try { const saved = localStorage.getItem('kke-lang'); if (LANGS.includes(saved)) return saved; } catch (_) {}
+    for (const l of navigator.languages || [navigator.language || '']) {
+      const code = String(l).slice(0, 2).toLowerCase();
+      if (LANGS.includes(code)) return code;
+    }
+    return 'en';
+  }
+  let LANG = detectLang();
+  // t('key', { name: 'x' }) fills {name}. Values are inserted as given: escape them first when the result goes into HTML.
+  function t(key, vars) {
+    let s = (I18N[LANG] && I18N[LANG][key]) ?? I18N.nl[key] ?? key;
+    if (vars) s = s.replace(/\{(\w+)\}/g, (m, k) => (k in vars ? String(vars[k]) : m));
+    return s;
+  }
 
   // ---------- Scene ----------
   const stage = document.getElementById('stage');
@@ -737,14 +1025,14 @@
   let names = {}; // id -> display name, refreshed on each render
   function seatLabel(p) {
     if (mode === 'p2p') {
-      if (p === net.side) return `Jij (${p})`;
-      return `${net.kind === 'match' ? net.opponent : 'Tegenstander'} (${p})`;
+      if (p === net.side) return `${t('you')} (${p})`;
+      return `${net.kind === 'match' ? net.opponent : t('opponent')} (${p})`;
     }
-    if (mode !== 'online') return p === 'X' ? 'Speler 1 (X)' : 'Speler 2 (O)';
+    if (mode !== 'online') return p === 'X' ? `${t('player1')} (X)` : `${t('player2')} (O)`;
     const id = game.seats[p];
-    if (id && id === myId) return `Jij (${p})`;
-    if (id) return `${names[id] || (p === 'X' ? 'Speler 1' : 'Speler 2')} (${p})`;
-    return `Speler ${p} (${p})`;
+    if (id && id === myId) return `${t('you')} (${p})`;
+    if (id) return `${names[id] || t(p === 'X' ? 'player1' : 'player2')} (${p})`;
+    return `${t('playerOf', { p })} (${p})`;
   }
 
   async function refreshNames() {
@@ -773,14 +1061,14 @@
   const newGameBtn = document.getElementById('newGame');
 
   const moveButtons = [];
-  const SLICE_NAMES = { M: 'middelste laag tussen L en R', E: 'middelste laag tussen U en D', S: 'middelste laag tussen F en B' };
   for (const f of ['U', 'D', 'L', 'R', 'F', 'B', 'M', 'E', 'S']) {
     for (const prime of [false, true]) {
       const b = document.createElement('button');
       b.type = 'button';
       b.textContent = f + (prime ? "'" : '');
+      b.dataset.face = f;
+      b.dataset.prime = prime ? '1' : '';
       if (FACES[f].slice) b.className = 'slice';
-      b.title = 'Draai ' + (SLICE_NAMES[f] ? 'de ' + SLICE_NAMES[f] : 'de ' + f + '-zijde') + ' ' + (prime ? 'tegen de klok in' : 'met de klok mee');
       b.addEventListener('click', () => makeMove(f, prime));
       moveButtons.push(b);
     }
@@ -789,8 +1077,15 @@
   moveButtons.filter((_, i) => i % 2 === 1).forEach(b => movesEl.appendChild(b));
   const hint = document.createElement('div');
   hint.className = 'hint';
-  hint.textContent = "M, E, S = middelste lagen · Toetsen: U D L R F B M E S · Shift + toets = tegen de klok in (')";
   movesEl.appendChild(hint);
+  function labelMoveButtons() {
+    for (const b of moveButtons) {
+      const f = b.dataset.face;
+      const what = FACES[f].slice ? t('slice' + f) : t('faceWhat', { f });
+      b.title = t('turnTitle', { what, dir: t(b.dataset.prime ? 'ccw' : 'cw') });
+    }
+    hint.textContent = t('movesHint');
+  }
 
   function setStatus(html, cls) { statusEl.innerHTML = html; statusEl.className = cls || ''; }
 
@@ -798,19 +1093,19 @@
     const p = game.current;
     const who = `<b class="${p}">${escapeHtml(seatLabel(p))}</b>`;
 
-    if (mode === 'connecting') setStatus('Verbinden…');
+    if (mode === 'connecting') setStatus(t('connecting'));
     else if (outcome) {
-      const msg = outcome.winner ? `${seatLabel(outcome.winner)} wint!` : 'Gelijkspel!';
-      setStatus(outcome.winner ? `<b class="${outcome.winner}">${escapeHtml(msg)}</b>` : msg, outcome.winner || '');
-    } else if (anim) setStatus(`${who}: draaien…`, p);
-    else if (mode === 'p2p' && !relay.connectedCount()) setStatus('Verbinden met de spelservers…');
-    else if (mode === 'p2p' && !netReady()) setStatus(net.hosting ? 'Wachten tot je tegenstander meedoet…' : 'Verbinden…');
-    else if (mode === 'p2p' && !isMyTurn()) setStatus(game.phase === 'place' ? `${who} zet een teken…` : `${who} draait aan de kubus…`, p);
-    else if (mode === 'online' && !game.seats[p]) setStatus(`Wachten tot iemand plaatsneemt als <b class="${p}">${p}</b>`, p);
+      const msg = outcome.winner ? t('wins', { who: seatLabel(outcome.winner) }) : t('draw');
+      setStatus(outcome.winner ? `<b class="${outcome.winner}">${escapeHtml(msg)}</b>` : escapeHtml(msg), outcome.winner || '');
+    } else if (anim) setStatus(t('turning', { who }), p);
+    else if (mode === 'p2p' && !relay.connectedCount()) setStatus(t('connectingServers'));
+    else if (mode === 'p2p' && !netReady()) setStatus(net.hosting ? t('waitOpponentJoin') : t('connecting'));
+    else if (mode === 'p2p' && !isMyTurn()) setStatus(t(game.phase === 'place' ? 'otherPlacing' : 'otherTurning', { who }), p);
+    else if (mode === 'online' && !game.seats[p]) setStatus(t('waitSeat', { p: `<b class="${p}">${p}</b>` }), p);
     else if (mode === 'online' && !isMyTurn()) {
-      setStatus(game.phase === 'place' ? `${who} zet een teken…` : `${who} draait aan de kubus…`, p);
+      setStatus(t(game.phase === 'place' ? 'otherPlacing' : 'otherTurning', { who }), p);
     } else {
-      setStatus(game.phase === 'place' ? `${who}: zet je teken` : `${who}: draai aan de kubus, of verplaats je teken`, p);
+      setStatus(t(game.phase === 'place' ? 'yourPlace' : 'yourMove', { who }), p);
     }
 
     const canMove = canAct('move');
@@ -820,7 +1115,7 @@
 
     // Banner: shown only once the game is over (after the final turn has animated).
     if (outcome && !anim) {
-      bannerText.textContent = outcome.winner ? `${seatLabel(outcome.winner)} wint!` : 'Gelijkspel!';
+      bannerText.textContent = outcome.winner ? t('wins', { who: seatLabel(outcome.winner) }) : t('draw');
       bannerText.style.color = outcome.winner === 'X' ? 'var(--x)' : outcome.winner === 'O' ? 'var(--o)' : 'var(--text)';
       banner.hidden = false;
     } else banner.hidden = true;
@@ -829,7 +1124,7 @@
     const mayReset = mode === 'local' || (mode === 'p2p' && net && net.kind === 'code' && netReady()) || (mode === 'online' && canWrite && (isSeated() || amOwner));
     newGameBtn.disabled = !mayReset;
     const bannerBtn = document.getElementById('bannerNew');
-    bannerBtn.textContent = inMatch ? (nextGameReady() ? 'Volgende game' : 'Naar het schema') : 'Opnieuw spelen';
+    bannerBtn.textContent = inMatch ? t(nextGameReady() ? 'nextGame' : 'toBracket') : t('playAgain');
     bannerBtn.hidden = !(mayReset || inMatch);
 
     renderSeats();
@@ -848,13 +1143,13 @@
       const btn = el.querySelector('button');
       el.classList.toggle('turn', !outcome && game.current === p);
       whoEl.classList.toggle('empty', !id);
-      whoEl.textContent = !id ? 'vrij' : id === myId ? 'jij' : (names[id] || (p === 'X' ? 'Speler 1' : 'Speler 2'));
+      whoEl.textContent = !id ? t('free') : id === myId ? t('youLower') : (names[id] || t(p === 'X' ? 'player1' : 'player2'));
       if (!id) {
-        btn.textContent = 'Speel als ' + p;
+        btn.textContent = t('playAs', { p });
         btn.hidden = !myId || !canWrite;
         btn.onclick = () => claimSeat(p);
       } else if (id === myId || amOwner) {
-        btn.textContent = id === myId ? 'Verlaat' : 'Vrijgeven';
+        btn.textContent = t(id === myId ? 'leaveSeat' : 'releaseSeat');
         btn.hidden = !canWrite;
         btn.onclick = () => leaveSeat(p);
       } else {
@@ -917,11 +1212,11 @@
     const code = e && e.code;
     if (code === 'invalid_argument' || code === 'not_granted') {
       canWrite = false;
-      showNote('Je kunt hier alleen meekijken. Vraag de eigenaar om je als Bewerker uit te nodigen om mee te spelen.');
+      showNote(t('viewOnly'));
     } else if (code === 'resource_exhausted') {
-      showNote('Even te snel achter elkaar. Probeer het over een paar seconden opnieuw.');
+      showNote(t('tooFast'));
     } else {
-      showNote('Opslaan lukte niet. Controleer je verbinding en probeer het opnieuw.');
+      showNote(t('saveFailed'));
     }
   }
 
@@ -973,10 +1268,10 @@
     busy = true;
     try {
       const lock = await db.doc('locks/seats').acquire({ holder: myId, ttlMs: 5000 });
-      if (!lock.acquired) { showNote('Iemand anders kiest net een plaats. Probeer het zo opnieuw.'); return; }
+      if (!lock.acquired) { showNote(t('seatBusy')); return; }
       const snap = await gameRef.get();
       const d = normalize(snap.exists ? snap.data() : null);
-      if (d.seats[p] && d.seats[p] !== myId) { showNote('Die plaats is net ingenomen.'); return; }
+      if (d.seats[p] && d.seats[p] !== myId) { showNote(t('seatTaken')); return; }
       const seats = { ...d.seats, [p]: myId };
       if (seats[other(p)] === myId) seats[other(p)] = null; // one seat per person
       if (snap.exists) await gameRef.update({ seats });
@@ -1097,7 +1392,6 @@
   const TOPIC_ROOT = 'kubus-kaas-en-eieren/v2/';
   const CONNECT_TIMEOUT_MS = 12000;
   const RETAINED_WAIT_MS = 2500;
-  const NET_ERR = 'Geen verbinding met de spelservers. Controleer je internet (wifi of mobiele data). Sommige school- of werknetwerken blokkeren dit; probeer dan mobiele data.';
 
   function makeCode() {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -1208,7 +1502,7 @@
       if (first && n.kind === 'match') relay.publish(n.topic + '/hello', { t: 'hello' });
       updateUI();
     });
-    setTimeout(() => { if (net === n && !relay.connectedCount()) showNote(NET_ERR); }, CONNECT_TIMEOUT_MS);
+    setTimeout(() => { if (net === n && !relay.connectedCount()) showNote(t('netErr')); }, CONNECT_TIMEOUT_MS);
     sync();
   }
 
@@ -1243,16 +1537,16 @@
 
   async function joinGame() {
     const code = joinInput.value.trim().toUpperCase();
-    if (!/^[A-Z0-9]{6}$/.test(code)) { showNote('Vul de code van 6 tekens in die je tegenstander ziet.'); return; }
+    if (!/^[A-Z0-9]{6}$/.test(code)) { showNote(t('enterCode')); return; }
     const side = savedSide(code) || 'O';
     enterNet({ kind: 'code', code, topic: 'game/' + code, side });
     const n = net;
     updateUI();
-    if (!(await waitFor(() => relay.connectedCount() > 0, CONNECT_TIMEOUT_MS))) { if (net === n) { showNote(NET_ERR); stopNet(true); } return; }
+    if (!(await waitFor(() => relay.connectedCount() > 0, CONNECT_TIMEOUT_MS))) { if (net === n) { showNote(t('netErr')); stopNet(true); } return; }
     await waitFor(() => n.gotState, RETAINED_WAIT_MS);
     if (net !== n) return;
     if (!n.gotState) {
-      showNote(`Geen spel gevonden met code ${code}. Controleer de code en of je tegenstander op "Online spel starten" heeft geklikt.`);
+      showNote(t('gameNotFound', { code }));
       stopNet(true);
       return;
     }
@@ -1281,18 +1575,14 @@
       let rn = '', score = '';
       if (loc) {
         const m = loc.m, mine = m.a === tourPlayerId ? 'a' : 'b';
-        rn = roundName(loc.r) + (m.bestOf > 1 ? ` · game ${net.gameNo + 1} (best of ${m.bestOf})` : '') + ' · ';
-        if (m.bestOf > 1) score = ` · stand ${m.wins[mine]}–${m.wins[mine === 'a' ? 'b' : 'a']}`;
+        rn = roundName(loc.r) + (m.bestOf > 1 ? t('gameOfBest', { n: net.gameNo + 1, b: m.bestOf }) : '') + ' · ';
+        if (m.bestOf > 1) score = t('score', { a: m.wins[mine], b: m.wins[mine === 'a' ? 'b' : 'a'] });
       }
-      p2pText.innerHTML = `${escapeHtml(rn)}jij (${side}) tegen ${escapeHtml(net.opponent)}${score}`;
-    } else if (net.hosting) {
-      p2pText.innerHTML = netReady()
-        ? `Code <code>${net.code}</code> · tegenstander verbonden · jij bent ${side}`
-        : `Geef deze code aan je tegenstander: <code>${net.code}</code>`;
+      p2pText.innerHTML = escapeHtml(rn) + t('youVs', { side, opp: escapeHtml(net.opponent) }) + escapeHtml(score);
     } else {
-      p2pText.innerHTML = net.joined
-        ? `Verbonden met spel <code>${net.code}</code> · jij bent ${side}`
-        : `Verbinden met <code>${net.code}</code>…`;
+      const code = `<code>${net.code}</code>`;
+      if (net.hosting) p2pText.innerHTML = t(netReady() ? 'hostConnected' : 'hostWaiting', { code, side });
+      else p2pText.innerHTML = t(net.joined ? 'joinedGame' : 'joiningGame', { code, side });
     }
   }
 
@@ -1301,12 +1591,12 @@
   joinInput.addEventListener('keydown', e => { if (e.key === 'Enter') joinGame(); });
   leaveBtn.addEventListener('click', () => stopNet(false));
   scheduleBtn.addEventListener('click', () => openTourPanel());
-  copyBtn.addEventListener('click', () => copyText(net && net.code, copyBtn, 'Kopieer code'));
-  shareBtn.addEventListener('click', () => net && shareLink('g', net.code, shareBtn, 'Deel link'));
+  copyBtn.addEventListener('click', () => copyText(net && net.code, copyBtn, t('copyCode')));
+  shareBtn.addEventListener('click', () => net && shareLink('g', net.code, shareBtn, t('shareLinkBtn')));
 
   async function copyText(text, btn, label) {
     if (!text) return;
-    try { await navigator.clipboard.writeText(text); btn.textContent = 'Gekopieerd'; }
+    try { await navigator.clipboard.writeText(text); btn.textContent = t('copied'); }
     catch (_) { btn.textContent = text; }
     setTimeout(() => { btn.textContent = label; }, 1500);
   }
@@ -1319,9 +1609,7 @@
   async function shareLink(kind, code, btn, label) {
     if (!code) return;
     const url = location.origin + location.pathname + '#' + kind + '-' + code;
-    const text = kind === 't'
-      ? `Doe mee met mijn toernooi Kubus Kaas en Eieren! Code: ${code}`
-      : `Speel Kubus Kaas en Eieren tegen me! Code: ${code}`;
+    const text = t(kind === 't' ? 'shareTourText' : 'shareGameText', { code });
     if (navigator.share) {
       try { await navigator.share({ title: 'Kubus Kaas en Eieren', text, url }); return; }
       catch (e) { if (e && e.name === 'AbortError') return; }
@@ -1357,7 +1645,7 @@
       installPrompt = null;
       updateUI();
     } else if (isIOS()) {
-      showNote('Tik in Safari onderaan op de deelknop (vierkantje met pijl) en kies "Zet op beginscherm".');
+      showNote(t('iosInstall'));
     }
   };
   installBtn.addEventListener('click', installApp);
@@ -1388,11 +1676,10 @@
   const tourPanel = document.getElementById('tourPanel');
   const tourBody = document.getElementById('tourBody');
   const tourBtn = document.getElementById('tourBtn');
-  const ROUND_NAMES = ['Finale', 'Halve finale', 'Kwartfinale', 'Achtste finale'];
 
   const cleanName = s => String(s || '').replace(/\s+/g, ' ').trim().slice(0, 20);
   const playerName = id => { const p = tour && tour.players.find(x => x.id === id); return p ? p.name : '?'; };
-  const roundName = r => ROUND_NAMES[tour.rounds.length - 1 - r] || `Ronde ${r + 1}`;
+  const roundName = r => t('rounds')[tour.rounds.length - 1 - r] || t('roundN', { n: r + 1 });
   const tourTopic = sub => 'tour/' + tourCode + '/' + sub;
   const saveTourRole = () => store.set('kke-tour-' + tourCode, { role: tourRole, playerId: tourPlayerId, name: tourName });
 
@@ -1466,7 +1753,7 @@
     const name = cleanName(document.getElementById('tOrgName').value);
     const plays = document.getElementById('tPlays').checked;
     const size = document.getElementById('tSize').value === '16' ? 16 : 8;
-    if (plays && !name) { setTourNote('Vul je naam in, of zet "Ik speel zelf mee" uit.'); return; }
+    if (plays && !name) { setTourNote(t('needNameOrUncheck')); return; }
     relay.start();
     leaveTour();
     tourCode = makeCode();
@@ -1481,7 +1768,7 @@
     tourView = 'tour';
     setTourNote('');
     afterTourChange();
-    setTimeout(() => { if (tourRole === 'org' && !relay.connectedCount()) setTourNote(NET_ERR); }, CONNECT_TIMEOUT_MS);
+    setTimeout(() => { if (tourRole === 'org' && !relay.connectedCount()) setTourNote(t('netErr')); }, CONNECT_TIMEOUT_MS);
   }
 
   function onJoin(p) {
@@ -1561,9 +1848,9 @@
   async function joinTour() {
     const code = document.getElementById('tCode').value.trim().toUpperCase();
     const name = cleanName(document.getElementById('tName').value);
-    if (!/^[A-Z0-9]{6}$/.test(code)) { setTourNote('Vul de toernooicode van 6 tekens in.'); return; }
+    if (!/^[A-Z0-9]{6}$/.test(code)) { setTourNote(t('enterTourCode')); return; }
     const saved = store.get('kke-tour-' + code);
-    if (!saved && !name) { setTourNote('Vul je naam in.'); return; }
+    if (!saved && !name) { setTourNote(t('enterName')); return; }
     relay.start();
     leaveTour();
     tourCode = code;
@@ -1578,14 +1865,14 @@
     setTourNote('');
     subscribeTour();
     renderTour();
-    if (!(await waitFor(() => relay.connectedCount() > 0, CONNECT_TIMEOUT_MS))) { if (tourCode === code) setTourNote(NET_ERR); return; }
+    if (!(await waitFor(() => relay.connectedCount() > 0, CONNECT_TIMEOUT_MS))) { if (tourCode === code) setTourNote(t('netErr')); return; }
     await waitFor(() => !!tour, RETAINED_WAIT_MS);
     if (tourCode !== code) return;
     if (!tour) {
       leaveTour();
       tourView = 'menu';
       renderTour();
-      setTourNote(`Geen toernooi gevonden met code ${code}. Controleer de code.`);
+      setTourNote(t('tourNotFound', { code }));
       return;
     }
     saveTourRole();
@@ -1638,7 +1925,7 @@
     const n = net;
     closeTourPanel();
     updateUI();
-    if (!(await waitFor(() => relay.connectedCount() > 0, CONNECT_TIMEOUT_MS))) { if (net === n) showNote(NET_ERR); return; }
+    if (!(await waitFor(() => relay.connectedCount() > 0, CONNECT_TIMEOUT_MS))) { if (net === n) showNote(t('netErr')); return; }
     await waitFor(() => n.gotState, RETAINED_WAIT_MS);
     if (net !== n) return;
     if (!n.gotState && side === 'X') { game = normalize({ round: 1, ver: 1 }); sync(); publishGame(); } // X opens the board
@@ -1654,7 +1941,7 @@
     if (mode === 'p2p' && net && net.kind === 'match') {
       const loc = findMatch(net.matchId);
       const g = loc && loc.m.games[net.gameNo];
-      if (g && g.how === 'coin') showNote(`Gelijkspel: de munt gaf deze game aan ${playerName(loc.m[g.winner])}.`);
+      if (g && g.how === 'coin') showNote(t('coinGame', { name: playerName(loc.m[g.winner]) }));
     }
     if (!tourPanel.hidden && tourView === 'tour') renderTour();
     updateUI();
@@ -1665,7 +1952,7 @@
     const active = myActiveMatch();
     const ready = !!active && !(mode === 'p2p' && net && net.kind === 'match' && net.matchId === active.m.id && net.gameNo === active.m.games.length);
     tourBtn.classList.toggle('ready', ready);
-    tourBtn.textContent = ready ? 'Jouw wedstrijd!' : 'Toernooi';
+    tourBtn.textContent = t(ready ? 'yourMatch' : 'tour');
   }
   tourBtn.addEventListener('click', openTourPanel);
 
@@ -1674,29 +1961,32 @@
     if (tourPanel.hidden) return;
     if (tourView === 'menu') { renderTourMenu(); return; }
     const me = tourPlayerId;
-    let html = `<div class="tp-head"><h2>Toernooi <code>${escapeHtml(tourCode || '')}</code></h2>
-      <div class="acts"><button type="button" data-act="copy">Kopieer code</button>${canShareLinks() ? '<button type="button" data-act="share">Deel link</button>' : ''}<button type="button" data-act="close">Terug</button></div></div>
+    const share = canShareLinks() ? `<button type="button" data-act="share">${t('shareLinkBtn')}</button>` : '';
+    let html = `<div class="tp-head"><h2>${t('tour')} <code>${escapeHtml(tourCode || '')}</code></h2>
+      <div class="acts"><button type="button" data-act="copy">${t('copyCode')}</button>${share}<button type="button" data-act="close">${t('back')}</button></div></div>
       <p class="tp-note" id="tNote">${escapeHtml(tourNoteText)}</p>`;
     if (!tour) {
-      html += `<div class="tp-card"><p>Verbinden met het toernooi…</p></div>`;
+      html += `<div class="tp-card"><p>${t('connectingTour')}</p></div>`;
     } else if (tour.phase === 'lobby') {
       const inList = tour.players.some(p => p.id === me);
       const n = tour.players.length;
+      const name = escapeHtml(tourName);
       let info;
       if (tourRole === 'org') {
-        info = `<p>Geef de code <code>${escapeHtml(tourCode)}</code> aan de spelers. Zij openen dit spel, kiezen <b>Toernooi</b> → <b>Meedoen</b> en vullen hun naam in.</p>
-          <p>Niet vol? Dan krijgen sommige spelers een vrije ronde en gaan ze direct door.</p>
-          <button type="button" class="primary" data-act="start" ${n < 2 ? 'disabled' : ''}>Start toernooi met ${n} speler${n === 1 ? '' : 's'}</button>`;
-      } else if (inList) info = `<p>Je doet mee als <b>${escapeHtml(tourName)}</b>. Wachten tot de organisator het toernooi start…</p>`;
-      else if (n >= tour.size) info = `<p>Dit toernooi is vol.</p>`;
-      else info = `<p>Aanmelden als <b>${escapeHtml(tourName)}</b>…</p>`;
-      html += `<div class="tp-card tp-me"><h3>Spelers ${n}/${tour.size}</h3>
-        <div class="players">${tour.players.map(p => `<span class="${p.id === me ? 'me' : ''}">${escapeHtml(p.name)}${p.id === me ? ' (jij)' : ''}</span>`).join('') || '<span>Nog niemand</span>'}</div>
+        info = `<p>${t('orgInfo', { code: escapeHtml(tourCode) })}</p>
+          <p>${t('notFull')}</p>
+          <button type="button" class="primary" data-act="start" ${n < 2 ? 'disabled' : ''}>${n === 1 ? t('startWith1') : t('startWithN', { n })}</button>`;
+      } else if (inList) info = `<p>${t('waitingStart', { name })}</p>`;
+      else if (n >= tour.size) info = `<p>${t('tourFull')}</p>`;
+      else info = `<p>${t('signingUp', { name })}</p>`;
+      const chips = tour.players.map(p => `<span class="${p.id === me ? 'me' : ''}">${escapeHtml(p.name)}${p.id === me ? escapeHtml(t('youTag')) : ''}</span>`).join('');
+      html += `<div class="tp-card tp-me"><h3>${t('playersCount', { n, size: tour.size })}</h3>
+        <div class="players">${chips || `<span>${t('nobodyYet')}</span>`}</div>
         ${info}</div>` + renderTourRules();
     } else {
       html += renderTourStatus() + renderBracket() + renderTourRules();
     }
-    html += `<div><button type="button" data-act="leave">${tourRole === 'org' ? 'Toernooi sluiten op dit apparaat' : 'Toernooi verlaten'}</button></div>`;
+    html += `<div><button type="button" data-act="leave">${t(tourRole === 'org' ? 'closeTourOrg' : 'leaveTour')}</button></div>`;
     tourBody.innerHTML = html;
   }
 
@@ -1704,8 +1994,8 @@
     const me = tourPlayerId;
     let body;
     if (tour.phase === 'done') {
-      body = `<div class="champion">Kampioen: ${escapeHtml(playerName(tour.champion))}${tour.champion === me ? ' (jij!)' : ''}</div>`;
-      if (tour.reward) body += `<p class="big" style="text-align:center">Prijs: <b>${escapeHtml(tour.reward)}</b></p>`;
+      body = `<div class="champion">${escapeHtml(t('champion', { name: playerName(tour.champion) }))}${tour.champion === me ? escapeHtml(t('youExcl')) : ''}</div>`;
+      if (tour.reward) body += `<p class="big" style="text-align:center">${t('prize', { reward: escapeHtml(tour.reward) })}</p>`;
     } else {
       const active = myActiveMatch();
       const inBracket = me && tour.rounds[0].some(m => m.a === me || m.b === me);
@@ -1714,16 +2004,15 @@
         const m = active.m;
         const mine = m.a === me ? 'a' : 'b', theirs = mine === 'a' ? 'b' : 'a';
         const series = m.bestOf > 1
-          ? `<p>Best of ${m.bestOf}: wie het eerst ${winsNeeded(m)} games wint, gaat door. Stand <b>${m.wins[mine]}–${m.wins[theirs]}</b>.</p>` : '';
-        const label = m.bestOf > 1 ? `Speel game ${m.games.length + 1}` : 'Speel je wedstrijd';
-        body = `<p class="big">${escapeHtml(roundName(active.r))}: jij tegen <b>${escapeHtml(playerName(m[theirs]))}</b></p>${series}
+          ? `<p>${t('seriesInfo', { bo: m.bestOf, need: winsNeeded(m), a: m.wins[mine], b: m.wins[theirs] })}</p>` : '';
+        const label = m.bestOf > 1 ? t('playGameN', { n: m.games.length + 1 }) : t('playMatch');
+        body = `<p class="big">${t('vsLine', { round: escapeHtml(roundName(active.r)), opp: escapeHtml(playerName(m[theirs])) })}</p>${series}
           <button type="button" class="primary" data-act="play" data-id="${m.id}">${label}</button>`;
-      } else if (out) body = `<p class="big">Je bent uitgeschakeld.</p><p>Je kunt het toernooi hier blijven volgen.</p>`;
-      else if (inBracket) body = `<p class="big">Je bent door! Wachten op je volgende tegenstander…</p>`;
-      else body = `<p class="big">Je kijkt mee.</p>`;
+      } else if (out) body = `<p class="big">${t('eliminated')}</p><p>${t('keepFollowing')}</p>`;
+      else if (inBracket) body = `<p class="big">${t('through')}</p>`;
+      else body = `<p class="big">${t('watching')}</p>`;
     }
-    const orgNote = tourRole === 'org' && tour.phase !== 'done'
-      ? `<p>Jij bent de organisator. Houd deze pagina open, dan worden alle uitslagen verwerkt.</p>` : '';
+    const orgNote = tourRole === 'org' && tour.phase !== 'done' ? `<p>${t('orgKeepOpen')}</p>` : '';
     return `<div class="tp-card tp-me">${body}${orgNote}</div>`;
   }
 
@@ -1736,56 +2025,60 @@
       else if (m.winner === id) cls.push('win');
       else if (m.winner) cls.push('lose');
       if (id && id === me) cls.push('me');
-      const name = id ? playerName(id) : (m.how === 'bye' ? 'vrije ronde' : 'nog onbekend');
+      const name = id ? playerName(id) : t(m.how === 'bye' ? 'byeRound' : 'unknownYet');
       // Series show the score; single games show who started as X.
       const right = m.bestOf > 1 ? (m.a && m.b ? String(m.wins[key]) : '') : (key === 'a' ? 'X' : 'O');
-      return `<div class="${cls.join(' ')}"><span class="nm">${escapeHtml(name)}</span><span class="side">${right}</span></div>`;
+      return `<div class="${cls.join(' ')}"><span class="nm" data-you="${escapeHtml(t('youTag'))}">${escapeHtml(name)}</span><span class="side">${right}</span></div>`;
     };
     const tag = m => {
-      if (m.how === 'bye') return 'vrije ronde';
+      if (m.how === 'bye') return t('byeRound');
       const coins = (m.games || []).filter(g => g.how === 'coin').length;
-      if (m.bestOf === 1 && coins) return 'gelijkspel, munt beslist';
+      if (m.bestOf === 1 && coins) return t('tagCoin');
       const parts = [];
-      if (!m.winner && m.a && m.b) parts.push(m.bestOf > 1 ? `bezig · game ${m.games.length + 1}` : 'bezig');
-      if (m.bestOf > 1 && coins) parts.push(`${coins}× munt bij gelijkspel`);
+      if (!m.winner && m.a && m.b) parts.push(m.bestOf > 1 ? t('tagLiveGame', { n: m.games.length + 1 }) : t('tagLive'));
+      if (m.bestOf > 1 && coins) parts.push(t('tagCoins', { n: coins }));
       return parts.join(' · ');
     };
-    const bo = r => tour.rounds[r][0].bestOf > 1 ? ` · best of ${tour.rounds[r][0].bestOf}` : '';
+    const bo = r => tour.rounds[r][0].bestOf > 1 ? t('boSuffix', { n: tour.rounds[r][0].bestOf }) : '';
     const cols = tour.rounds.map((rd, r) => `<div class="round"><h4>${escapeHtml(roundName(r) + bo(r))}</h4><div class="matches">${
-      rd.map(m => `<div class="match ${!m.winner && m.a && m.b ? 'live' : ''}">${slot(m, 'a')}${slot(m, 'b')}${tag(m) ? `<div class="tag">${tag(m)}</div>` : ''}</div>`).join('')
+      rd.map(m => `<div class="match ${!m.winner && m.a && m.b ? 'live' : ''}">${slot(m, 'a')}${slot(m, 'b')}${tag(m) ? `<div class="tag">${escapeHtml(tag(m))}</div>` : ''}</div>`).join('')
     }</div></div>`).join('');
     return `<div class="bracket-scroll"><div class="bracket">${cols}</div></div>`;
   }
 
   function renderTourRules() {
-    const reward = tour.reward ? `<p>Prijs voor de winnaar: <b>${escapeHtml(tour.reward)}</b></p>` : '';
-    return `<div class="tp-card"><h3>Speelwijze</h3>
-      <p>Knock-out: de winnaar gaat door, de verliezer ligt eruit. Halve finales zijn best of 3, de finale is best of 5. In een reeks wisselen de spelers per game wie met X begint. Gelijkspel in een game? Dan beslist een munt.</p>
-      ${reward}</div>`;
+    const reward = tour.reward ? `<p>${t('prizeForWinner', { reward: escapeHtml(tour.reward) })}</p>` : '';
+    return `<div class="tp-card"><h3>${t('howItWorks')}</h3><p>${t('howItWorksText')}</p>${reward}</div>`;
   }
 
   function renderTourMenu() {
-    tourBody.innerHTML = `<div class="tp-head"><h2>Toernooi</h2><div class="acts"><button type="button" data-act="close">Terug</button></div></div>
+    // Keep what was typed when the language changes while this form is open.
+    const keep = {};
+    for (const id of ['tSize', 'tOrgName', 'tReward', 'tCode', 'tName']) { const el = document.getElementById(id); if (el) keep[id] = el.value; }
+    const plays = document.getElementById('tPlays');
+    tourBody.innerHTML = `<div class="tp-head"><h2>${t('tour')}</h2><div class="acts"><button type="button" data-act="close">${t('back')}</button></div></div>
       <p class="tp-note" id="tNote">${escapeHtml(tourNoteText)}</p>
       <div class="tp-grid">
         <section class="tp-card">
-          <h3>Toernooi organiseren</h3>
-          <p>Jij krijgt een code voor de spelers. Iedereen speelt op zijn eigen telefoon of computer; winnaars gaan door, verliezers liggen eruit.</p>
-          <label>Aantal spelers
-            <select id="tSize"><option value="8">8 spelers</option><option value="16">16 spelers</option></select></label>
-          <label class="chk"><input type="checkbox" id="tPlays" checked> Ik speel zelf mee</label>
-          <label>Jouw naam <input type="text" id="tOrgName" maxlength="20" autocomplete="nickname" placeholder="Bijv. Sam"></label>
-          <label>Prijs voor de winnaar (optioneel) <input type="text" id="tReward" maxlength="80" autocomplete="off" placeholder="Bijv. een zak drop"></label>
-          <button type="button" class="primary" data-act="create">Toernooi aanmaken</button>
+          <h3>${t('organize')}</h3>
+          <p>${t('organizeDesc')}</p>
+          <label>${t('numPlayers')}
+            <select id="tSize"><option value="8">${t('nPlayers', { n: 8 })}</option><option value="16">${t('nPlayers', { n: 16 })}</option></select></label>
+          <label class="chk"><input type="checkbox" id="tPlays" checked> ${t('iPlay')}</label>
+          <label>${t('yourName')} <input type="text" id="tOrgName" maxlength="20" autocomplete="nickname" placeholder="${escapeHtml(t('namePh1'))}"></label>
+          <label>${t('prizeOptional')} <input type="text" id="tReward" maxlength="80" autocomplete="off" placeholder="${escapeHtml(t('prizePh'))}"></label>
+          <button type="button" class="primary" data-act="create">${t('createTour')}</button>
         </section>
         <section class="tp-card">
-          <h3>Meedoen aan een toernooi</h3>
-          <p>Vul de code van de organisator in en kies de naam waaronder je speelt.</p>
-          <label>Toernooicode <input type="text" id="tCode" maxlength="6" autocomplete="off" spellcheck="false" placeholder="CODE"></label>
-          <label>Jouw naam <input type="text" id="tName" maxlength="20" autocomplete="nickname" placeholder="Bijv. Robin"></label>
-          <button type="button" class="primary" data-act="join">Meedoen</button>
+          <h3>${t('joinTourTitle')}</h3>
+          <p>${t('joinTourDesc')}</p>
+          <label>${t('tourCode')} <input type="text" id="tCode" maxlength="6" autocomplete="off" spellcheck="false" placeholder="CODE"></label>
+          <label>${t('yourName')} <input type="text" id="tName" maxlength="20" autocomplete="nickname" placeholder="${escapeHtml(t('namePh2'))}"></label>
+          <button type="button" class="primary" data-act="join">${t('join')}</button>
         </section>
       </div>`;
+    for (const [id, v] of Object.entries(keep)) document.getElementById(id).value = v;
+    if (plays) document.getElementById('tPlays').checked = plays.checked;
   }
 
   tourBody.addEventListener('click', e => {
@@ -1797,8 +2090,8 @@
     else if (act === 'join') joinTour();
     else if (act === 'start') startTour();
     else if (act === 'play') playMatch(el.dataset.id);
-    else if (act === 'copy') copyText(tourCode, el, 'Kopieer code');
-    else if (act === 'share') shareLink('t', tourCode, el, 'Deel link');
+    else if (act === 'copy') copyText(tourCode, el, t('copyCode'));
+    else if (act === 'share') shareLink('t', tourCode, el, t('shareLinkBtn'));
     else if (act === 'leave') { leaveTour(); tourView = 'menu'; setTourNote(''); renderTour(); updateUI(); }
   });
   tourBody.addEventListener('keydown', e => {
@@ -1847,7 +2140,7 @@
   document.getElementById('hHost').addEventListener('click', () => { hideHome(); hostGame(); });
   const homeJoin = () => {
     const code = document.getElementById('hCode').value.trim().toUpperCase();
-    if (!/^[A-Z0-9]{6}$/.test(code)) { showNote('Vul de code van 6 tekens in die je tegenstander ziet.'); return; }
+    if (!/^[A-Z0-9]{6}$/.test(code)) { showNote(t('enterCode')); return; }
     hideHome();
     joinInput.value = code;
     joinGame();
@@ -1868,7 +2161,7 @@
   async function shareApp() {
     const data = {
       title: 'Kubus Kaas en Eieren',
-      text: 'Speel Kubus Kaas en Eieren met me: boter-kaas-en-eieren op een Rubiks kubus. Open de link en installeer de app:',
+      text: t('shareAppText'),
       url: APP_URL,
     };
     if (navigator.share) {
@@ -1877,8 +2170,8 @@
     }
     // No share menu (most computers): copy the link and show the QR screen with the link visible.
     showSharePage();
-    copyText(APP_URL, document.getElementById('shareCopy'), 'Kopieer link');
-    shareOk('Link gekopieerd. Plak hem in een bericht aan je vriend.');
+    copyText(APP_URL, document.getElementById('shareCopy'), t('copyLink'));
+    shareOk(t('linkCopiedPaste'));
   }
 
   let qrLoading = null;
@@ -1902,7 +2195,7 @@
     showHome('share');
     const box = document.getElementById('shareQr');
     if (box.dataset.ready) return;
-    box.textContent = 'QR-code laden…';
+    box.textContent = t('qrLoading');
     try {
       await loadQrLib();
       const qr = window.qrcode(0, 'M');
@@ -1911,7 +2204,7 @@
       box.innerHTML = qr.createSvgTag({ cellSize: 6, margin: 2, scalable: true });
       box.dataset.ready = '1';
     } catch (_) {
-      box.textContent = 'De QR-code kan nu niet laden. Deel de link hieronder.';
+      box.textContent = t('qrFailed');
     }
   }
 
@@ -1919,15 +2212,15 @@
   document.getElementById('hShareQr').addEventListener('click', showSharePage);
   document.getElementById('shareSend').addEventListener('click', shareApp);
   document.getElementById('shareCopy').addEventListener('click', e => {
-    copyText(APP_URL, e.currentTarget, 'Kopieer link');
-    shareOk('Link gekopieerd.');
+    copyText(APP_URL, e.currentTarget, t('copyLink'));
+    shareOk(t('linkCopied'));
   });
 
   // ---------- Bug reports ----------
   // Reports go to a private-ish ntfy.sh mailbox. A scheduled Claude task on the owner's computer reads them,
   // separates real bugs from noise, and prepares fixes that the owner approves before they go live.
   const BUG_TOPIC = 'kke-bugs-q7Vt2mZx9KpR4wLs8NcY';
-  const APP_VERSION = '20261008151504'; // filled in by build.ps1
+  const APP_VERSION = '20261008153655'; // filled in by build.ps1
   const BUG_WAIT_MS = 2 * 60 * 1000;
 
   function setBugMessages(error, ok) {
@@ -1939,9 +2232,9 @@
     const textEl = document.getElementById('bugText'), stepsEl = document.getElementById('bugSteps');
     const text = textEl.value.replace(/\s+/g, ' ').trim();
     const steps = stepsEl.value.replace(/\s+/g, ' ').trim();
-    if (text.length < 15) { setBugMessages('Beschrijf het probleem iets uitgebreider (minstens 15 tekens).', ''); return; }
+    if (text.length < 15) { setBugMessages(t('bugTooShort'), ''); return; }
     const last = Number(store.get('kke-bug-last')) || 0;
-    if (Date.now() - last < BUG_WAIT_MS) { setBugMessages('Je hebt net al een melding gestuurd. Probeer het over een paar minuten opnieuw.', ''); return; }
+    if (Date.now() - last < BUG_WAIT_MS) { setBugMessages(t('bugWait'), ''); return; }
     const btn = document.getElementById('bugSend');
     btn.disabled = true;
     setBugMessages('', '');
@@ -1958,11 +2251,11 @@
       if (!res.ok) throw new Error('http');
       store.set('kke-bug-last', Date.now());
       textEl.value = ''; stepsEl.value = '';
-      setBugMessages('', 'Bedankt! Claude bekijkt je melding.');
+      setBugMessages('', t('bugThanks'));
     } catch (e) {
       setBugMessages(e && e.message === 'busy'
-        ? 'Er worden nu te veel meldingen verstuurd. Probeer het later opnieuw.'
-        : 'Versturen lukte niet. Controleer je internetverbinding en probeer het opnieuw.', '');
+        ? t('bugBusy')
+        : t('bugFailed'), '');
     } finally {
       clearTimeout(timer);
       btn.disabled = false;
@@ -1970,12 +2263,43 @@
   }
   document.getElementById('bugSend').addEventListener('click', sendBug);
 
+  // ---------- Language switch ----------
+  let modeHelpKey = 'modeHelpLocalOnly';
+
+  // Re-renders every piece of text in the chosen language. Only this device changes.
+  function applyLang() {
+    document.documentElement.lang = LANG;
+    for (const el of document.querySelectorAll('[data-i18n]')) el.textContent = t(el.dataset.i18n);
+    for (const el of document.querySelectorAll('[data-i18n-html]')) el.innerHTML = t(el.dataset.i18nHtml);
+    for (const el of document.querySelectorAll('[data-i18n-ph]')) el.placeholder = t(el.dataset.i18nPh);
+    for (const el of document.querySelectorAll('[data-i18n-aria]')) el.setAttribute('aria-label', t(el.dataset.i18nAria));
+    for (const b of document.querySelectorAll('#langSwitch [data-lang]')) b.setAttribute('aria-pressed', String(b.dataset.lang === LANG));
+    document.getElementById('modeHelp').textContent = t(modeHelpKey);
+    labelMoveButtons();
+    updateUI();
+    renderTour();
+  }
+
+  function setLang(lang) {
+    if (!LANGS.includes(lang) || lang === LANG) return;
+    LANG = lang;
+    try { localStorage.setItem('kke-lang', lang); } catch (_) { /* still switches for this visit */ }
+    // Messages already on screen were written in the old language; clear them rather than mix languages.
+    showNote('');
+    setBugMessages('', '');
+    shareOk('');
+    applyLang();
+  }
+  document.getElementById('langSwitch').addEventListener('click', e => {
+    const b = e.target.closest('[data-lang]');
+    if (b) setLang(b.dataset.lang);
+  });
+
   // ---------- Start: online when the shared store is available, otherwise one device ----------
   function startLocal() {
     mode = 'local';
-    document.getElementById('modeHelp').textContent = onlineSupported()
-      ? 'Via "Menu" kies je: samen op dit apparaat, online 1-tegen-1 of een toernooi. Sleep om de kubus te bekijken.'
-      : 'Jullie spelen samen op dit apparaat. Sleep ergens om de kubus van alle kanten te bekijken.';
+    modeHelpKey = onlineSupported() ? 'modeHelpMenu' : 'modeHelpLocalOnly';
+    applyLang();
     sync();
     if (homeSupported()) showHome();
   }
@@ -1993,9 +2317,10 @@
       if (w === false) canWrite = false;
     }
     mode = 'online';
-    document.getElementById('modeHelp').textContent = 'Online: deel deze pagina met je tegenstander. Ieder kiest een plaats (X of O) en speelt op zijn eigen apparaat. Sleep om de kubus te bekijken.';
-    if (!myId) showNote('Log in om mee te spelen. Je kijkt nu alleen mee.');
-    else if (!canWrite) showNote('Je kunt hier alleen meekijken. Vraag de eigenaar om je als Bewerker uit te nodigen om mee te spelen.');
+    modeHelpKey = 'modeHelpOnline';
+    applyLang();
+    if (!myId) showNote(t('loginToPlay'));
+    else if (!canWrite) showNote(t('viewOnly'));
     gameRef = db.doc('games/current');
     const subscribe = () => gameRef.onSnapshot(snap => {
       gameExists = snap.exists;
@@ -2003,13 +2328,13 @@
       sync();
     }, err => {
       if (err && err.code === 'unavailable') setTimeout(subscribe, 2000);
-      else showNote('De verbinding met het spel is verbroken. Laad de pagina opnieuw.');
+      else showNote(t('connLost'));
     });
     subscribe();
     sync();
   }
 
-  updateUI();
+  applyLang();
   if (window.claude && typeof window.claude.use === 'function') startOnline();
   else { startLocal(); openFromLink(); }
   window.addEventListener('hashchange', openFromLink);
