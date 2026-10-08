@@ -108,7 +108,7 @@
   }
   #moves.active { box-shadow: 0 0 0 2px var(--gold); }
   #moves button { min-width: 48px; font-weight: 600; font-size: 16px; }
-  #moves button.slice { background: #252b3b; border-style: dashed; }
+  #moves button.slice { background: #252b3b; border-style: dashed; border-color: rgba(255, 204, 51, .6); color: var(--gold); }
   #moves .hint { grid-column: 1 / -1; text-align: center; font-size: 12px; color: var(--muted); }
 
   #log {
@@ -429,7 +429,7 @@
       you: 'Jij', opponent: 'Tegenstander', player1: 'Speler 1', player2: 'Speler 2', playerOf: 'Speler {p}',
       faceWhat: 'de {f}-zijde', sliceM: 'de middelste laag tussen L en R', sliceE: 'de middelste laag tussen U en D', sliceS: 'de middelste laag tussen F en B',
       cw: 'met de klok mee', ccw: 'tegen de klok in', turnTitle: 'Draai {what} {dir}',
-      movesHint: "M, E, S = middelste lagen · Toetsen: U D L R F B M E S · Shift + toets = tegen de klok in (')",
+      movesHint: "Wijs een knop aan (of houd hem vast) om de laag te zien · M, E, S = middelste lagen, goud op de kubus · Shift + toets = tegen de klok in (')",
       connecting: 'Verbinden…', wins: '{who} wint!', draw: 'Gelijkspel!', turning: '{who}: draaien…',
       connectingServers: 'Verbinden met de spelservers…', waitOpponentJoin: 'Wachten tot je tegenstander meedoet…',
       otherPlacing: '{who} zet een teken…', otherTurning: '{who} draait aan de kubus…', waitSeat: 'Wachten tot iemand plaatsneemt als {p}',
@@ -513,7 +513,7 @@
       you: 'You', opponent: 'Opponent', player1: 'Player 1', player2: 'Player 2', playerOf: 'Player {p}',
       faceWhat: 'the {f} face', sliceM: 'the middle layer between L and R', sliceE: 'the middle layer between U and D', sliceS: 'the middle layer between F and B',
       cw: 'clockwise', ccw: 'counter-clockwise', turnTitle: 'Turn {what} {dir}',
-      movesHint: "M, E, S = middle layers · Keys: U D L R F B M E S · Shift + key = counter-clockwise (')",
+      movesHint: "Hover over (or hold) a button to see its layer · M, E, S = middle layers, gold on the cube · Shift + key = counter-clockwise (')",
       connecting: 'Connecting…', wins: '{who} wins!', draw: "It's a draw!", turning: '{who}: turning…',
       connectingServers: 'Connecting to the game servers…', waitOpponentJoin: 'Waiting for your opponent to join…',
       otherPlacing: '{who} is placing a mark…', otherTurning: '{who} is turning the cube…', waitSeat: 'Waiting for someone to take seat {p}',
@@ -597,7 +597,7 @@
       you: 'Du', opponent: 'Gegner', player1: 'Spieler 1', player2: 'Spieler 2', playerOf: 'Spieler {p}',
       faceWhat: 'Die {f}-Seite', sliceM: 'Die mittlere Schicht zwischen L und R', sliceE: 'Die mittlere Schicht zwischen U und D', sliceS: 'Die mittlere Schicht zwischen F und B',
       cw: 'im Uhrzeigersinn', ccw: 'gegen den Uhrzeigersinn', turnTitle: '{what} {dir} drehen',
-      movesHint: "M, E, S = mittlere Schichten · Tasten: U D L R F B M E S · Shift + Taste = gegen den Uhrzeigersinn (')",
+      movesHint: "Zeig auf eine Taste (oder halte sie), um die Schicht zu sehen · M, E, S = mittlere Schichten, golden am Würfel · Shift + Taste = gegen den Uhrzeigersinn (')",
       connecting: 'Verbinden…', wins: '{who} gewinnt!', draw: 'Unentschieden!', turning: '{who}: dreht…',
       connectingServers: 'Verbindung zu den Spielservern…', waitOpponentJoin: 'Warte, bis dein Gegner beitritt…',
       otherPlacing: '{who} setzt ein Zeichen…', otherTurning: '{who} dreht den Würfel…', waitSeat: 'Warte, bis jemand Platz {p} nimmt',
@@ -761,9 +761,15 @@
     let bg = '#f5f5f2';
     if (u.win) bg = '#ffd23f';
     else if (u.hover) bg = u.hover === 'X' ? '#ffd9da' : '#d6e5ff';
+    else if (u.layer) bg = '#ffe9a6';
     else if (u.last) bg = '#fff3c4';
     c.fillStyle = bg;
     c.fillRect(0, 0, 128, 128);
+    if (u.layer && !u.win) { // part of the layer a move button would turn
+      c.strokeStyle = '#e0a400';
+      c.lineWidth = 14;
+      c.strokeRect(7, 7, 114, 114);
+    }
     c.lineCap = 'round';
     c.lineWidth = 16;
     if (u.mark === 'X') {
@@ -822,24 +828,44 @@
     F: { axis: 'z', layer:  1, n: new THREE.Vector3(0, 0, 1) },
     B: { axis: 'z', layer: -1, n: new THREE.Vector3(0, 0,-1) },
     // Middle slices, standard notation: M turns like L, E like D, S like F.
-    M: { axis: 'x', layer:  0, n: new THREE.Vector3(-1,0, 0), slice: true },
-    E: { axis: 'y', layer:  0, n: new THREE.Vector3(0,-1, 0), slice: true },
-    S: { axis: 'z', layer:  0, n: new THREE.Vector3(0, 0, 1), slice: true },
+    // Their gold labels sit just outside an edge where that middle layer comes out of the cube.
+    M: { axis: 'x', layer:  0, n: new THREE.Vector3(-1,0, 0), slice: true, label: new THREE.Vector3(0, 1.85, 1.85) },
+    E: { axis: 'y', layer:  0, n: new THREE.Vector3(0,-1, 0), slice: true, label: new THREE.Vector3(1.85, 0, 1.85) },
+    S: { axis: 'z', layer:  0, n: new THREE.Vector3(0, 0, 1), slice: true, label: new THREE.Vector3(1.85, 1.85, 0) },
   };
   for (const [name, f] of Object.entries(FACES)) {
-    if (f.slice) continue; // labels only for the six outer faces
     const cv = document.createElement('canvas');
     cv.width = cv.height = 64;
     const c = cv.getContext('2d');
-    c.fillStyle = 'rgba(255,255,255,0.9)';
-    c.font = 'bold 44px system-ui, sans-serif';
     c.textAlign = 'center'; c.textBaseline = 'middle';
+    if (f.slice) {
+      c.fillStyle = 'rgba(255, 204, 51, 0.95)';
+      c.beginPath(); c.arc(32, 32, 28, 0, Math.PI * 2); c.fill();
+      c.fillStyle = '#1b1f2b';
+      c.font = 'bold 38px system-ui, sans-serif';
+    } else {
+      c.fillStyle = 'rgba(255,255,255,0.9)';
+      c.font = 'bold 44px system-ui, sans-serif';
+    }
     c.fillText(name, 32, 34);
-    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(cv), transparent: true, opacity: 0.7, depthWrite: false }));
-    sp.position.copy(f.n).multiplyScalar(2.15);
-    sp.scale.set(0.45, 0.45, 1);
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(cv), transparent: true, opacity: f.slice ? 0.9 : 0.7, depthWrite: false }));
+    if (f.slice) { sp.position.copy(f.label); sp.scale.set(0.4, 0.4, 1); }
+    else { sp.position.copy(f.n).multiplyScalar(2.15); sp.scale.set(0.45, 0.45, 1); }
     cubeGroup.add(sp);
   }
+
+  // Light up the layer a move button would turn (hover or press-and-hold on a button).
+  let shownLayer = null;
+  function showLayer(face) {
+    if (shownLayer === face) return;
+    shownLayer = face;
+    const f = face && FACES[face];
+    for (const s of stickers) {
+      const on = !!f && Math.round(s.parent.position[f.axis]) === f.layer;
+      if (s.userData.layer !== on) { s.userData.layer = on; drawSticker(s); }
+    }
+  }
+  function refreshLayer() { const f = shownLayer; shownLayer = null; showLayer(f); }
 
   // ---------- Cube mechanics ----------
   const turnAngle = prime => (prime ? 1 : -1) * Math.PI / 2; // clockwise seen from the face = -90° about its normal
@@ -881,6 +907,7 @@
     for (const c of [...pivot.children]) { cubeGroup.attach(c); snapCubie(c); }
     cubeGroup.remove(pivot);
     anim = null;
+    refreshLayer(); // a highlighted layer now contains different pieces
     sync();
   }
 
@@ -960,6 +987,7 @@
       for (const m of d.moves) applyMoveInstant(m.f, m.p);
       applied = { round: d.round, moves: d.moves.slice() };
       rebuildLog();
+      refreshLayer();
     } else if (d.moves.length === applied.moves.length + 1) {
       const m = d.moves[d.moves.length - 1];
       applied = { round: d.round, moves: d.moves.slice() };
@@ -1069,7 +1097,14 @@
       b.dataset.face = f;
       b.dataset.prime = prime ? '1' : '';
       if (FACES[f].slice) b.className = 'slice';
-      b.addEventListener('click', () => makeMove(f, prime));
+      b.addEventListener('click', () => { showLayer(null); makeMove(f, prime); });
+      // Show which layer this button turns: on hover (mouse), while pressed (touch) and on keyboard focus.
+      b.addEventListener('pointerenter', () => showLayer(f));
+      b.addEventListener('pointerdown', () => showLayer(f));
+      b.addEventListener('pointerleave', () => showLayer(null));
+      b.addEventListener('pointercancel', () => showLayer(null));
+      b.addEventListener('focus', () => showLayer(f));
+      b.addEventListener('blur', () => showLayer(null));
       moveButtons.push(b);
     }
   }
@@ -2220,7 +2255,7 @@
   // Reports go to a private-ish ntfy.sh mailbox. A scheduled Claude task on the owner's computer reads them,
   // separates real bugs from noise, and prepares fixes that the owner approves before they go live.
   const BUG_TOPIC = 'kke-bugs-q7Vt2mZx9KpR4wLs8NcY';
-  const APP_VERSION = '20261008153655'; // filled in by build.ps1
+  const APP_VERSION = '20261008154935'; // filled in by build.ps1
   const BUG_WAIT_MS = 2 * 60 * 1000;
 
   function setBugMessages(error, ok) {
