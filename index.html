@@ -1,0 +1,1731 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Boter-kaas-en-eieren op een Rubiks kubus: alleen, met z'n tweeÃ«n of in een toernooi.">
+<meta name="theme-color" content="#12151e">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Kubus KEE">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+</head>
+<body>
+<title>Kubus Kaas en Eieren</title>
+<style>
+  /* Layout: full-screen 3D stage, controls float above it (top: title/status/seats, bottom: move pad). Deliberately one dark look. */
+  :root {
+    color-scheme: dark;
+    --bg1: #2b3245;
+    --bg2: #12151e;
+    --panel: rgba(20, 24, 34, 0.86);
+    --line: #454e66;
+    --btn: #2d3447;
+    --btn-hover: #3a435b;
+    --text: #eef1f7;
+    --muted: #9aa3b5;
+    --x: #f0565b;
+    --o: #4b8ffa;
+    --gold: #ffcc33;
+    --warn: #ffb4a8;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; }
+  body {
+    background: var(--bg2) radial-gradient(ellipse at center, var(--bg1) 0%, var(--bg2) 75%);
+    color: var(--text);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 14px;
+    user-select: none;
+  }
+  #stage { position: fixed; inset: 0; touch-action: none; cursor: grab; }
+  #stage.dragging { cursor: grabbing; }
+  #stage.can-place { cursor: pointer; }
+
+  #top {
+    position: fixed; top: 0; left: 0; right: 0;
+    padding: calc(12px + env(safe-area-inset-top, 0px)) 16px 0;
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    pointer-events: none;
+  }
+  #top > * { pointer-events: auto; }
+  header { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  h1 { margin: 0; font-size: 20px; letter-spacing: .5px; text-wrap: balance; }
+  h1 .x { color: var(--x); } h1 .o { color: var(--o); }
+
+  #status {
+    background: var(--panel); padding: 9px 18px; border-radius: 999px;
+    font-size: 16px; max-width: 100%; text-align: center;
+    border: 2px solid transparent; transition: border-color .2s;
+  }
+  #status.X { border-color: var(--x); }
+  #status.O { border-color: var(--o); }
+  #status b.X, .X-text { color: var(--x); } #status b.O, .O-text { color: var(--o); }
+
+  #seats { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+  #seats[hidden] { display: none; }
+  .seat {
+    display: flex; align-items: center; gap: 8px; background: var(--panel);
+    border-radius: 999px; padding: 4px 6px 4px 12px; border: 1px solid var(--line);
+  }
+  .seat .mark { font-weight: 800; font-size: 16px; }
+  .seat .who { max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .seat .who.empty { color: var(--muted); font-style: italic; }
+  .seat button { padding: 4px 10px; font-size: 13px; border-radius: 999px; }
+  .seat.turn { border-color: var(--gold); }
+
+  #p2p { background: var(--panel); border-radius: 12px; padding: 8px 10px; display: flex; flex-direction: column; gap: 6px; align-items: center; max-width: 100%; }
+  #p2p[hidden], #p2p [hidden] { display: none; }
+  .p2p-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; justify-content: center; }
+  .p2p-row .or { color: var(--muted); }
+  #joinCode {
+    font: inherit; font-family: ui-monospace, Consolas, monospace; font-size: 16px; letter-spacing: 3px; text-transform: uppercase;
+    width: 8.5em; padding: 7px 10px; border-radius: 8px; border: 1px solid var(--line);
+    background: var(--bg2); color: var(--text); user-select: text;
+  }
+  #joinCode:focus-visible { outline: 2px solid var(--gold); outline-offset: 1px; }
+  #p2pText { text-align: center; }
+  #p2pText code { font-family: ui-monospace, Consolas, monospace; font-size: 18px; letter-spacing: 3px; color: var(--gold); }
+
+  #note { color: var(--warn); background: var(--panel); border-radius: 10px; padding: 6px 12px; max-width: 520px; text-align: center; }
+
+  button {
+    font: inherit; color: var(--text); background: var(--btn); border: 1px solid var(--line);
+    border-radius: 8px; padding: 8px 12px; cursor: pointer;
+  }
+  button:hover:not(:disabled) { background: var(--btn-hover); }
+  button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+  button:disabled { opacity: .35; cursor: not-allowed; }
+
+  #moves {
+    position: fixed; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); left: 50%; transform: translateX(-50%);
+    background: var(--panel); padding: 10px; border-radius: 14px;
+    display: grid; grid-template-columns: repeat(9, auto); gap: 6px;
+    transition: box-shadow .2s;
+  }
+  #moves.active { box-shadow: 0 0 0 2px var(--gold); }
+  #moves button { min-width: 48px; font-weight: 600; font-size: 16px; }
+  #moves button.slice { background: #252b3b; border-style: dashed; }
+  #moves .hint { grid-column: 1 / -1; text-align: center; font-size: 12px; color: var(--muted); }
+
+  #log {
+    position: fixed; right: 16px; top: 150px; width: 150px; max-height: 45vh; overflow-y: auto;
+    background: var(--panel); border-radius: 10px; padding: 8px 10px; font-size: 13px;
+  }
+  #log h2 { margin: 0 0 6px; font-size: 13px; color: var(--muted); font-weight: 600; }
+  #log ol { margin: 0; padding-left: 22px; }
+  #log .X { color: var(--x); } #log .O { color: var(--o); }
+
+  #help {
+    position: fixed; left: 16px; top: 150px; width: 220px;
+    background: var(--panel); border-radius: 10px; padding: 8px 12px; font-size: 13px; color: var(--muted);
+    line-height: 1.45;
+  }
+  #help b { color: var(--text); }
+
+  #banner {
+    position: fixed; left: 0; right: 0; top: 42%; display: flex; justify-content: center;
+    pointer-events: none; padding: 0 16px;
+  }
+  #banner[hidden] { display: none; }
+  #banner div {
+    pointer-events: auto; background: var(--panel); border: 2px solid var(--gold);
+    padding: 16px 26px; border-radius: 16px; text-align: center;
+  }
+  #banner h2 { margin: 0 0 8px; font-size: 26px; }
+
+  .head-actions { display: flex; gap: 8px; flex-shrink: 0; }
+  #tourBtn.ready { border-color: var(--gold); color: var(--gold); box-shadow: 0 0 0 2px rgba(255, 204, 51, .35); animation: pulse 1.6s ease-in-out infinite; }
+  @keyframes pulse { 50% { box-shadow: 0 0 0 6px rgba(255, 204, 51, 0); } }
+  button.primary { background: #4a3d10; border-color: var(--gold); color: #fff3cf; font-weight: 600; }
+  button.primary:hover:not(:disabled) { background: #5d4c14; }
+
+  /* Tournament panel: a full-screen sheet over the cube */
+  #tourPanel {
+    position: fixed; inset: 0; z-index: 20; overflow-y: auto; background: rgba(10, 12, 18, .94);
+    padding: calc(16px + env(safe-area-inset-top, 0px)) 16px calc(24px + env(safe-area-inset-bottom, 0px));
+    user-select: text;
+  }
+  #tourPanel[hidden] { display: none; }
+  .tp-wrap { max-width: 1100px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+  .tp-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+  .tp-head h2 { margin: 0; font-size: 22px; text-wrap: balance; }
+  .tp-head .acts { display: flex; gap: 8px; flex-wrap: wrap; }
+  .tp-wrap code { font-family: ui-monospace, Consolas, monospace; letter-spacing: 3px; color: var(--gold); }
+  .tp-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+  .tp-card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+  .tp-card h3 { margin: 0; font-size: 16px; }
+  .tp-card p { margin: 0; color: var(--muted); line-height: 1.45; }
+  .tp-card label { display: flex; flex-direction: column; gap: 4px; color: var(--muted); font-size: 13px; }
+  .tp-card label.chk { flex-direction: row; align-items: center; gap: 8px; color: var(--text); font-size: 14px; }
+  .tp-card input[type="text"], .tp-card select {
+    font: inherit; font-size: 16px; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--line);
+    background: var(--bg2); color: var(--text);
+  }
+  .tp-card input:focus-visible, .tp-card select:focus-visible { outline: 2px solid var(--gold); outline-offset: 1px; }
+  #tCode { font-family: ui-monospace, Consolas, monospace; letter-spacing: 3px; text-transform: uppercase; }
+  .tp-note { color: var(--warn); margin: 0; }
+  .tp-note:empty { display: none; }
+  .tp-me { border-color: var(--gold); }
+  .tp-me .big { font-size: 18px; color: var(--text); }
+  .players { display: flex; flex-wrap: wrap; gap: 6px; }
+  .players span { background: var(--btn); border: 1px solid var(--line); border-radius: 999px; padding: 4px 10px; }
+  .players span.me { border-color: var(--gold); }
+  .champion { text-align: center; font-size: 24px; font-weight: 700; color: var(--gold); padding: 6px 0; }
+  .bracket-scroll { overflow-x: auto; padding-bottom: 6px; }
+  .bracket { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(170px, 1fr); gap: 14px; min-width: min-content; }
+  .round { display: flex; flex-direction: column; gap: 10px; }
+  .round h4 { margin: 0; font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+  .round .matches { flex: 1; display: flex; flex-direction: column; justify-content: space-around; gap: 10px; }
+  .match { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+  .match.live { border-color: var(--gold); }
+  .slot { display: flex; justify-content: space-between; gap: 8px; padding: 6px 10px; white-space: nowrap; }
+  .slot + .slot { border-top: 1px solid var(--line); }
+  .slot .nm { overflow: hidden; text-overflow: ellipsis; }
+  .slot .side { color: var(--muted); font-size: 12px; }
+  .slot.win .nm { font-weight: 700; color: var(--gold); }
+  .slot.lose .nm { color: var(--muted); text-decoration: line-through; }
+  .slot.empty .nm { color: var(--muted); font-style: italic; }
+  .slot.me .nm::after { content: " (jij)"; color: var(--muted); font-weight: 400; }
+  .match .tag { font-size: 11px; color: var(--muted); padding: 0 10px 6px; }
+
+  @media (max-width: 760px) {
+    #log, #help { display: none; }
+    h1 .x, h1 .o, h1 .dot { display: none; }
+    .head-actions button { padding: 6px 10px; }
+    #moves { width: calc(100vw - 32px); grid-template-columns: repeat(9, minmax(0, 1fr)); padding: 8px; gap: 4px; }
+    #moves button { min-width: 0; padding: 7px 0; font-size: 14px; }
+    #status { font-size: 14px; }
+    h1 { font-size: 17px; }
+  }
+  @media (prefers-reduced-motion: reduce) { #status, #moves { transition: none; } #tourBtn.ready { animation: none; } }
+</style>
+
+<div id="stage"></div>
+
+<div id="top">
+  <header>
+    <h1>Kubus Kaas en Eieren <span class="x">X</span><span class="dot">·</span><span class="o">O</span></h1>
+    <div class="head-actions">
+      <button type="button" id="tourBtn" hidden>Toernooi</button>
+      <button type="button" id="newGame">Nieuw spel</button>
+    </div>
+  </header>
+  <div id="status">Laden…</div>
+  <div id="seats" hidden>
+    <div class="seat" id="seatX"><span class="mark X-text">X</span><span class="who"></span><button type="button"></button></div>
+    <div class="seat" id="seatO"><span class="mark O-text">O</span><span class="who"></span><button type="button"></button></div>
+  </div>
+  <div id="p2p" hidden>
+    <div class="p2p-row" id="p2pStart">
+      <button type="button" id="hostBtn">Online spel starten</button>
+      <span class="or">of</span>
+      <input id="joinCode" maxlength="6" placeholder="CODE" autocomplete="off" spellcheck="false" aria-label="Spelcode van je tegenstander">
+      <button type="button" id="joinBtn">Meedoen</button>
+      <button type="button" id="installBtn" hidden>App installeren</button>
+    </div>
+    <div class="p2p-row" id="p2pInfo" hidden>
+      <span id="p2pText"></span>
+      <button type="button" id="copyCode" hidden>Kopieer code</button>
+      <button type="button" id="shareLink" hidden>Deel link</button>
+      <button type="button" id="openSchedule" hidden>Schema</button>
+      <button type="button" id="leaveP2P">Stoppen</button>
+    </div>
+  </div>
+  <div id="note" hidden></div>
+</div>
+
+<aside id="help">
+  <b>Spelregels</b><br>
+  1. Klik op een leeg vakje om je teken te zetten.<br>
+  2. Draai daarna precies één keer aan de kubus: een buitenzijde (U D L R F B) of een middelste laag (M E S). Shift + toets = tegen de klok in.<br>
+  Bedacht? Zolang je nog niet gedraaid hebt, klik je een ander leeg vakje om je teken te verplaatsen, of je teken zelf om het terug te nemen.<br>
+  3. Drie op een rij op één zijde wint; dit wordt pas na het draaien gecontroleerd.<br><br>
+  <span id="modeHelp">Sleep ergens om de kubus van alle kanten te bekijken.</span>
+</aside>
+
+<aside id="log"><h2>Zetten</h2><ol id="logList"></ol></aside>
+
+<div id="moves"></div>
+
+<div id="banner" hidden><div><h2 id="bannerText"></h2><button id="bannerNew">Opnieuw spelen</button></div></div>
+
+<div id="tourPanel" hidden><div class="tp-wrap" id="tourBody"></div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"></script>
+<script>
+(() => {
+  'use strict';
+
+  // ---------- Scene ----------
+  const stage = document.getElementById('stage');
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  stage.appendChild(renderer.domElement);
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 100);
+  camera.position.set(0, 0, 11);
+
+  scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+  const key = new THREE.DirectionalLight(0xffffff, 0.8);
+  key.position.set(5, 8, 10);
+  scene.add(key);
+  const rim = new THREE.DirectionalLight(0xffffff, 0.3);
+  rim.position.set(-6, -4, -8);
+  scene.add(rim);
+
+  const cubeGroup = new THREE.Group();
+  scene.add(cubeGroup);
+  // Initial 3/4 view showing U, F and R.
+  cubeGroup.quaternion
+    .setFromAxisAngle(new THREE.Vector3(1, 0, 0), 0.5)
+    .multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), -0.65));
+
+  function resize() {
+    const w = window.innerWidth, h = window.innerHeight;
+    renderer.setSize(w, h);
+    camera.aspect = w / h;
+    // Keep the cube fully visible on narrow screens.
+    camera.position.z = w < h ? 11 * Math.min(1.7, h / w * 0.85) : 11;
+    camera.updateProjectionMatrix();
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  // ---------- Cube construction ----------
+  const DIRS = [
+    { n: new THREE.Vector3( 1, 0, 0), rot: [0,  Math.PI / 2, 0] },
+    { n: new THREE.Vector3(-1, 0, 0), rot: [0, -Math.PI / 2, 0] },
+    { n: new THREE.Vector3( 0, 1, 0), rot: [-Math.PI / 2, 0, 0] },
+    { n: new THREE.Vector3( 0,-1, 0), rot: [ Math.PI / 2, 0, 0] },
+    { n: new THREE.Vector3( 0, 0, 1), rot: [0, 0, 0] },
+    { n: new THREE.Vector3( 0, 0,-1), rot: [0, Math.PI, 0] },
+  ];
+
+  const bodyGeo = roundedBoxGeometry(0.97, 0.06, 3);
+  const bodyMat = new THREE.MeshStandardMaterial({ color: 0x0b0b0d, roughness: 0.4, metalness: 0.15 });
+  const stickerGeo = roundedSquareGeometry(0.84, 0.12);
+
+  const cubies = [];
+  const stickers = [];   // index in this array is the sticker's stable id (shared between devices)
+  const pickables = [];
+
+  for (let x = -1; x <= 1; x++) for (let y = -1; y <= 1; y++) for (let z = -1; z <= 1; z++) {
+    const cubie = new THREE.Mesh(bodyGeo, bodyMat);
+    cubie.position.set(x, y, z);
+    cubie.userData.home = cubie.position.clone();
+    cubeGroup.add(cubie);
+    cubies.push(cubie);
+    pickables.push(cubie);
+    for (const d of DIRS) {
+      if (d.n.x && d.n.x !== x) continue;
+      if (d.n.y && d.n.y !== y) continue;
+      if (d.n.z && d.n.z !== z) continue;
+      stickers.push(makeSticker(cubie, d, stickers.length));
+    }
+  }
+  const STICKER_COUNT = stickers.length; // 54
+
+  function makeSticker(cubie, d, index) {
+    const canvas = document.createElement('canvas');
+    canvas.width = canvas.height = 128;
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.anisotropy = 4;
+    const mat = new THREE.MeshBasicMaterial({ map: tex });
+    const mesh = new THREE.Mesh(stickerGeo, mat);
+    mesh.position.copy(d.n).multiplyScalar(0.492);
+    mesh.rotation.set(...d.rot);
+    mesh.userData = { isSticker: true, index, normal: d.n.clone(), canvas, tex, mark: null, hover: null, win: false, last: false };
+    cubie.add(mesh);
+    pickables.push(mesh);
+    drawSticker(mesh);
+    return mesh;
+  }
+
+  function drawSticker(s) {
+    const u = s.userData, c = u.canvas.getContext('2d');
+    let bg = '#f5f5f2';
+    if (u.win) bg = '#ffd23f';
+    else if (u.hover) bg = u.hover === 'X' ? '#ffd9da' : '#d6e5ff';
+    else if (u.last) bg = '#fff3c4';
+    c.fillStyle = bg;
+    c.fillRect(0, 0, 128, 128);
+    c.lineCap = 'round';
+    c.lineWidth = 16;
+    if (u.mark === 'X') {
+      c.strokeStyle = '#d7263d';
+      c.beginPath();
+      c.moveTo(32, 32); c.lineTo(96, 96);
+      c.moveTo(96, 32); c.lineTo(32, 96);
+      c.stroke();
+    } else if (u.mark === 'O') {
+      c.strokeStyle = '#1f5fd6';
+      c.beginPath();
+      c.arc(64, 64, 34, 0, Math.PI * 2);
+      c.stroke();
+    }
+    u.tex.needsUpdate = true;
+  }
+
+  function roundedSquareGeometry(size, r) {
+    const h = size / 2, s = new THREE.Shape();
+    s.moveTo(-h + r, -h);
+    s.lineTo(h - r, -h); s.quadraticCurveTo(h, -h, h, -h + r);
+    s.lineTo(h, h - r);  s.quadraticCurveTo(h, h, h - r, h);
+    s.lineTo(-h + r, h); s.quadraticCurveTo(-h, h, -h, h - r);
+    s.lineTo(-h, -h + r); s.quadraticCurveTo(-h, -h, -h + r, -h);
+    const g = new THREE.ShapeGeometry(s, 6);
+    const pos = g.attributes.position, uv = g.attributes.uv;
+    for (let i = 0; i < pos.count; i++) uv.setXY(i, (pos.getX(i) + h) / size, (pos.getY(i) + h) / size);
+    return g;
+  }
+
+  // Box with rounded edges: subdivide a box, then push vertices onto an inner box + radius.
+  function roundedBoxGeometry(size, radius, seg) {
+    const g = new THREE.BoxGeometry(size, size, size, seg * 2, seg * 2, seg * 2);
+    const pos = g.attributes.position, inner = size / 2 - radius, v = new THREE.Vector3(), c = new THREE.Vector3();
+    for (let i = 0; i < pos.count; i++) {
+      v.fromBufferAttribute(pos, i);
+      c.set(
+        Math.max(-inner, Math.min(inner, v.x)),
+        Math.max(-inner, Math.min(inner, v.y)),
+        Math.max(-inner, Math.min(inner, v.z)));
+      v.sub(c);
+      if (v.lengthSq() > 0) v.setLength(radius);
+      v.add(c);
+      pos.setXYZ(i, v.x, v.y, v.z);
+    }
+    g.computeVertexNormals();
+    return g;
+  }
+
+  // Face labels, fixed to the cube frame (not to cubies).
+  const FACES = {
+    U: { axis: 'y', layer:  1, n: new THREE.Vector3(0, 1, 0) },
+    D: { axis: 'y', layer: -1, n: new THREE.Vector3(0,-1, 0) },
+    R: { axis: 'x', layer:  1, n: new THREE.Vector3(1, 0, 0) },
+    L: { axis: 'x', layer: -1, n: new THREE.Vector3(-1,0, 0) },
+    F: { axis: 'z', layer:  1, n: new THREE.Vector3(0, 0, 1) },
+    B: { axis: 'z', layer: -1, n: new THREE.Vector3(0, 0,-1) },
+    // Middle slices, standard notation: M turns like L, E like D, S like F.
+    M: { axis: 'x', layer:  0, n: new THREE.Vector3(-1,0, 0), slice: true },
+    E: { axis: 'y', layer:  0, n: new THREE.Vector3(0,-1, 0), slice: true },
+    S: { axis: 'z', layer:  0, n: new THREE.Vector3(0, 0, 1), slice: true },
+  };
+  for (const [name, f] of Object.entries(FACES)) {
+    if (f.slice) continue; // labels only for the six outer faces
+    const cv = document.createElement('canvas');
+    cv.width = cv.height = 64;
+    const c = cv.getContext('2d');
+    c.fillStyle = 'rgba(255,255,255,0.9)';
+    c.font = 'bold 44px system-ui, sans-serif';
+    c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.fillText(name, 32, 34);
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(cv), transparent: true, opacity: 0.7, depthWrite: false }));
+    sp.position.copy(f.n).multiplyScalar(2.15);
+    sp.scale.set(0.45, 0.45, 1);
+    cubeGroup.add(sp);
+  }
+
+  // ---------- Cube mechanics ----------
+  const turnAngle = prime => (prime ? 1 : -1) * Math.PI / 2; // clockwise seen from the face = -90° about its normal
+
+  function snapCubie(c) {
+    c.position.set(Math.round(c.position.x), Math.round(c.position.y), Math.round(c.position.z));
+    const m = new THREE.Matrix4().makeRotationFromQuaternion(c.quaternion), e = m.elements;
+    for (const i of [0, 1, 2, 4, 5, 6, 8, 9, 10]) e[i] = Math.round(e[i]);
+    c.quaternion.setFromRotationMatrix(m);
+  }
+
+  function resetCube() {
+    for (const c of cubies) { c.position.copy(c.userData.home); c.quaternion.identity(); }
+  }
+
+  function applyMoveInstant(face, prime) {
+    const f = FACES[face], q = new THREE.Quaternion().setFromAxisAngle(f.n, turnAngle(prime));
+    for (const c of cubies) {
+      if (Math.round(c.position[f.axis]) !== f.layer) continue;
+      c.position.applyQuaternion(q);
+      c.quaternion.premultiply(q);
+      snapCubie(c);
+    }
+  }
+
+  let anim = null;
+  function startMoveAnimation(face, prime) {
+    const f = FACES[face];
+    const pivot = new THREE.Object3D();
+    cubeGroup.add(pivot);
+    for (const c of cubies) if (Math.round(c.position[f.axis]) === f.layer) pivot.attach(c);
+    anim = { pivot, axis: f.n, angle: turnAngle(prime), start: performance.now(), dur: 320 };
+  }
+
+  function finishMoveAnimation() {
+    const { pivot } = anim;
+    pivot.quaternion.setFromAxisAngle(anim.axis, anim.angle);
+    pivot.updateMatrixWorld(true);
+    for (const c of [...pivot.children]) { cubeGroup.attach(c); snapCubie(c); }
+    cubeGroup.remove(pivot);
+    anim = null;
+    sync();
+  }
+
+  // ---------- Win detection ----------
+  const LINES = [
+    [[0,0],[0,1],[0,2]], [[1,0],[1,1],[1,2]], [[2,0],[2,1],[2,2]],
+    [[0,0],[1,0],[2,0]], [[0,1],[1,1],[2,1]], [[0,2],[1,2],[2,2]],
+    [[0,0],[1,1],[2,2]], [[0,2],[1,1],[2,0]],
+  ];
+
+  function faceGrids() {
+    const grids = {};
+    const n = new THREE.Vector3();
+    for (const s of stickers) {
+      const cubie = s.parent;
+      n.copy(s.userData.normal).applyQuaternion(cubie.quaternion);
+      const axis = Math.abs(n.x) > 0.5 ? 'x' : Math.abs(n.y) > 0.5 ? 'y' : 'z';
+      const key = axis + (n[axis] > 0 ? '+' : '-');
+      const [a, b] = axis === 'x' ? ['y', 'z'] : axis === 'y' ? ['x', 'z'] : ['x', 'y'];
+      const grid = grids[key] || (grids[key] = [[], [], []]);
+      grid[Math.round(cubie.position[a]) + 1][Math.round(cubie.position[b]) + 1] = s;
+    }
+    return grids;
+  }
+
+  function findLines(mark) {
+    const found = [];
+    for (const grid of Object.values(faceGrids())) {
+      for (const line of LINES) {
+        const ss = line.map(([r, c]) => grid[r][c]);
+        if (ss.every(s => s && s.userData.mark === mark)) found.push(ss);
+      }
+    }
+    return found;
+  }
+
+  // ---------- Shared game document ----------
+  // The whole game is one document. The cube's position is the list of moves since a solved cube,
+  // so every device replays it identically. The winner is derived, never stored.
+  const EMPTY_MARKS = '.'.repeat(STICKER_COUNT);
+  const other = p => p === 'X' ? 'O' : 'X';
+
+  function normalize(d) {
+    d = d || {};
+    const marks = typeof d.marks === 'string' && d.marks.length === STICKER_COUNT ? d.marks : EMPTY_MARKS;
+    const moves = Array.isArray(d.moves) ? d.moves.filter(m => m && FACES[m.f]).map(m => ({ f: m.f, p: !!m.p, by: m.by === 'O' ? 'O' : 'X' })) : [];
+    const seats = d.seats || {};
+    return {
+      round: Number.isFinite(d.round) ? d.round : 0,
+      seats: { X: typeof seats.X === 'string' ? seats.X : null, O: typeof seats.O === 'string' ? seats.O : null },
+      marks, moves,
+      current: d.current === 'O' ? 'O' : 'X',
+      phase: d.phase === 'move' ? 'move' : 'place',
+      last: Number.isInteger(d.last) ? d.last : -1,
+      ver: Number.isFinite(d.ver) ? d.ver : 0, // grows with every change; used by code play to ignore stale states
+    };
+  }
+
+  let game = normalize(null);      // latest document state
+  let gameExists = false;
+  let applied = { round: null, moves: [] }; // what the 3D cube currently shows
+  let outcome = null;               // { winner: 'X'|'O'|null, lines } once the game is over
+
+  // Mode: 'connecting' | 'local' (one device) | 'online'
+  let mode = 'connecting';
+  let db = null, userApi = null, gameRef = null, myId = null, canWrite = true, amOwner = false;
+  let busy = false;
+
+  const sameMove = (a, b) => a.f === b.f && a.p === b.p;
+
+  function sync() {
+    if (anim) return; // picked up again when the animation ends
+    const d = game;
+    const isPrefix = applied.moves.length <= d.moves.length && applied.moves.every((m, i) => sameMove(m, d.moves[i]));
+    if (d.round !== applied.round || !isPrefix || d.moves.length > applied.moves.length + 1) {
+      resetCube();
+      for (const m of d.moves) applyMoveInstant(m.f, m.p);
+      applied = { round: d.round, moves: d.moves.slice() };
+      rebuildLog();
+    } else if (d.moves.length === applied.moves.length + 1) {
+      const m = d.moves[d.moves.length - 1];
+      applied = { round: d.round, moves: d.moves.slice() };
+      appendLog(m);
+      applyMarks();
+      startMoveAnimation(m.f, m.p);
+      updateUI();
+      return;
+    }
+    applyMarks();
+    computeOutcome();
+    if (outcome && mode === 'p2p' && net && net.kind === 'match') reportMatchResult(net.matchId, net.gameNo, outcome.winner);
+    updateUI();
+  }
+
+  function applyMarks() {
+    for (const s of stickers) {
+      const ch = game.marks[s.userData.index];
+      const mark = ch === 'X' || ch === 'O' ? ch : null;
+      const last = s.userData.index === game.last && !!mark;
+      if (s.userData.mark !== mark || s.userData.last !== last) {
+        s.userData.mark = mark; s.userData.last = last;
+        if (mark) s.userData.hover = null;
+        drawSticker(s);
+      }
+    }
+  }
+
+  function computeOutcome() {
+    let result = null;
+    // Only judged right after a cube turn: while a mark waits for its turn ('move' phase) nothing counts yet.
+    if (game.moves.length && game.phase === 'place') {
+      const mover = game.moves[game.moves.length - 1].by;
+      const moverLines = findLines(mover), otherLines = findLines(other(mover));
+      if (moverLines.length) result = { winner: mover, lines: moverLines };
+      else if (otherLines.length) result = { winner: other(mover), lines: otherLines };
+      else if (!game.marks.includes('.')) result = { winner: null, lines: [] };
+    }
+    outcome = result;
+    const winSet = new Set();
+    if (result) for (const line of result.lines) for (const s of line) winSet.add(s);
+    for (const s of stickers) {
+      const w = winSet.has(s);
+      if (s.userData.win !== w) { s.userData.win = w; drawSticker(s); }
+    }
+  }
+
+  // ---------- Players ----------
+  const isSeated = () => mode === 'online' && !!myId && (game.seats.X === myId || game.seats.O === myId);
+  const mySide = () => game.seats.X === myId ? 'X' : game.seats.O === myId ? 'O' : null;
+
+  function isMyTurn() {
+    if (mode === 'local') return true;
+    if (mode === 'p2p') return netReady() && game.current === net.side;
+    if (mode !== 'online' || !myId || !canWrite) return false;
+    return game.seats[game.current] === myId;
+  }
+
+  function canAct(phase) {
+    return !anim && !busy && !outcome && game.phase === phase && isMyTurn();
+  }
+
+  let names = {}; // id -> display name, refreshed on each render
+  function seatLabel(p) {
+    if (mode === 'p2p') {
+      if (p === net.side) return `Jij (${p})`;
+      return `${net.kind === 'match' ? net.opponent : 'Tegenstander'} (${p})`;
+    }
+    if (mode !== 'online') return p === 'X' ? 'Speler 1 (X)' : 'Speler 2 (O)';
+    const id = game.seats[p];
+    if (id && id === myId) return `Jij (${p})`;
+    if (id) return `${names[id] || (p === 'X' ? 'Speler 1' : 'Speler 2')} (${p})`;
+    return `Speler ${p} (${p})`;
+  }
+
+  async function refreshNames() {
+    if (!userApi) return;
+    const ids = [game.seats.X, game.seats.O].filter(Boolean);
+    if (!ids.length) return;
+    try {
+      const ps = await userApi.profiles(ids);
+      let changed = false;
+      for (const id of ids) {
+        const n = (ps[id] && ps[id].name) || '';
+        if (names[id] !== n) { names[id] = n; changed = true; }
+      }
+      if (changed) updateUI();
+    } catch (_) { /* names are optional */ }
+  }
+
+  // ---------- UI ----------
+  const statusEl = document.getElementById('status');
+  const movesEl = document.getElementById('moves');
+  const logList = document.getElementById('logList');
+  const banner = document.getElementById('banner');
+  const bannerText = document.getElementById('bannerText');
+  const seatsEl = document.getElementById('seats');
+  const noteEl = document.getElementById('note');
+  const newGameBtn = document.getElementById('newGame');
+
+  const moveButtons = [];
+  const SLICE_NAMES = { M: 'middelste laag tussen L en R', E: 'middelste laag tussen U en D', S: 'middelste laag tussen F en B' };
+  for (const f of ['U', 'D', 'L', 'R', 'F', 'B', 'M', 'E', 'S']) {
+    for (const prime of [false, true]) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = f + (prime ? "'" : '');
+      if (FACES[f].slice) b.className = 'slice';
+      b.title = 'Draai ' + (SLICE_NAMES[f] ? 'de ' + SLICE_NAMES[f] : 'de ' + f + '-zijde') + ' ' + (prime ? 'tegen de klok in' : 'met de klok mee');
+      b.addEventListener('click', () => makeMove(f, prime));
+      moveButtons.push(b);
+    }
+  }
+  moveButtons.filter((_, i) => i % 2 === 0).forEach(b => movesEl.appendChild(b));
+  moveButtons.filter((_, i) => i % 2 === 1).forEach(b => movesEl.appendChild(b));
+  const hint = document.createElement('div');
+  hint.className = 'hint';
+  hint.textContent = "M, E, S = middelste lagen · Toetsen: U D L R F B M E S · Shift + toets = tegen de klok in (')";
+  movesEl.appendChild(hint);
+
+  function setStatus(html, cls) { statusEl.innerHTML = html; statusEl.className = cls || ''; }
+
+  function updateUI() {
+    const p = game.current;
+    const who = `<b class="${p}">${escapeHtml(seatLabel(p))}</b>`;
+
+    if (mode === 'connecting') setStatus('Verbinden…');
+    else if (outcome) {
+      const msg = outcome.winner ? `${seatLabel(outcome.winner)} wint!` : 'Gelijkspel!';
+      setStatus(outcome.winner ? `<b class="${outcome.winner}">${escapeHtml(msg)}</b>` : msg, outcome.winner || '');
+    } else if (anim) setStatus(`${who}: draaien…`, p);
+    else if (mode === 'p2p' && !relay.connectedCount()) setStatus('Verbinden met de spelservers…');
+    else if (mode === 'p2p' && !netReady()) setStatus(net.hosting ? 'Wachten tot je tegenstander meedoet…' : 'Verbinden…');
+    else if (mode === 'p2p' && !isMyTurn()) setStatus(game.phase === 'place' ? `${who} zet een teken…` : `${who} draait aan de kubus…`, p);
+    else if (mode === 'online' && !game.seats[p]) setStatus(`Wachten tot iemand plaatsneemt als <b class="${p}">${p}</b>`, p);
+    else if (mode === 'online' && !isMyTurn()) {
+      setStatus(game.phase === 'place' ? `${who} zet een teken…` : `${who} draait aan de kubus…`, p);
+    } else {
+      setStatus(game.phase === 'place' ? `${who}: zet je teken` : `${who}: draai aan de kubus, of verplaats je teken`, p);
+    }
+
+    const canMove = canAct('move');
+    moveButtons.forEach(b => b.disabled = !canMove);
+    movesEl.classList.toggle('active', canMove);
+    if (!canAct('place') && !canMove) setHover(null);
+
+    // Banner: shown only once the game is over (after the final turn has animated).
+    if (outcome && !anim) {
+      bannerText.textContent = outcome.winner ? `${seatLabel(outcome.winner)} wint!` : 'Gelijkspel!';
+      bannerText.style.color = outcome.winner === 'X' ? 'var(--x)' : outcome.winner === 'O' ? 'var(--o)' : 'var(--text)';
+      banner.hidden = false;
+    } else banner.hidden = true;
+
+    const inMatch = mode === 'p2p' && net && net.kind === 'match';
+    const mayReset = mode === 'local' || (mode === 'p2p' && net && net.kind === 'code' && netReady()) || (mode === 'online' && canWrite && (isSeated() || amOwner));
+    newGameBtn.disabled = !mayReset;
+    const bannerBtn = document.getElementById('bannerNew');
+    bannerBtn.textContent = inMatch ? (nextGameReady() ? 'Volgende game' : 'Naar het schema') : 'Opnieuw spelen';
+    bannerBtn.hidden = !(mayReset || inMatch);
+
+    renderSeats();
+    renderNet();
+    renderTourButton();
+    renderInstall();
+  }
+
+  function renderSeats() {
+    seatsEl.hidden = mode !== 'online';
+    if (mode !== 'online') return;
+    for (const p of ['X', 'O']) {
+      const el = document.getElementById('seat' + p);
+      const id = game.seats[p];
+      const whoEl = el.querySelector('.who');
+      const btn = el.querySelector('button');
+      el.classList.toggle('turn', !outcome && game.current === p);
+      whoEl.classList.toggle('empty', !id);
+      whoEl.textContent = !id ? 'vrij' : id === myId ? 'jij' : (names[id] || (p === 'X' ? 'Speler 1' : 'Speler 2'));
+      if (!id) {
+        btn.textContent = 'Speel als ' + p;
+        btn.hidden = !myId || !canWrite;
+        btn.onclick = () => claimSeat(p);
+      } else if (id === myId || amOwner) {
+        btn.textContent = id === myId ? 'Verlaat' : 'Vrijgeven';
+        btn.hidden = !canWrite;
+        btn.onclick = () => leaveSeat(p);
+      } else {
+        btn.hidden = true;
+        btn.onclick = null;
+      }
+    }
+    refreshNames();
+  }
+
+  function showNote(text) {
+    noteEl.textContent = text || '';
+    noteEl.hidden = !text;
+  }
+
+  function rebuildLog() {
+    logList.innerHTML = '';
+    game.moves.forEach(appendLog);
+  }
+  function appendLog(m) {
+    const li = document.createElement('li');
+    const span = document.createElement('span');
+    span.className = m.by;
+    span.textContent = m.by;
+    li.append(span, ' ' + m.f + (m.p ? "'" : ''));
+    logList.appendChild(li);
+    logList.parentElement.scrollTop = 1e6;
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+  }
+
+  // ---------- Actions ----------
+  async function commit(patch) {
+    if (mode === 'local' || mode === 'p2p') {
+      game = normalize({ ...game, ...patch, ver: game.ver + 1 });
+      sync();
+      if (mode === 'p2p') publishGame();
+      return;
+    }
+    if (mode !== 'online' || busy) return;
+    busy = true;
+    updateUI();
+    try {
+      if (gameExists) await gameRef.update(patch);
+      else await gameRef.set({ ...game, ...patch });
+      showNote('');
+    } catch (e) {
+      reportWriteError(e);
+    } finally {
+      busy = false;
+      updateUI();
+    }
+  }
+
+  function reportWriteError(e) {
+    const code = e && e.code;
+    if (code === 'invalid_argument' || code === 'not_granted') {
+      canWrite = false;
+      showNote('Je kunt hier alleen meekijken. Vraag de eigenaar om je als Bewerker uit te nodigen om mee te spelen.');
+    } else if (code === 'resource_exhausted') {
+      showNote('Even te snel achter elkaar. Probeer het over een paar seconden opnieuw.');
+    } else {
+      showNote('Opslaan lukte niet. Controleer je verbinding en probeer het opnieuw.');
+    }
+  }
+
+  function placeMark(s) {
+    if (!s || !canAct('place') || s.userData.mark) return false;
+    const i = s.userData.index;
+    const marks = game.marks.slice(0, i) + game.current + game.marks.slice(i + 1);
+    commit({ marks, phase: 'move', last: i });
+    return true;
+  }
+
+  // Before turning the cube, the player may change their mind: click an empty sticker to move
+  // this turn's mark there, or click the mark itself to take it back.
+  function changeMark(s) {
+    if (!s || !canAct('move') || game.last < 0) return false;
+    const i = s.userData.index, from = game.last;
+    let marks = game.marks.slice(0, from) + '.' + game.marks.slice(from + 1);
+    if (i === from) { commit({ marks, phase: 'place', last: -1 }); return true; }
+    if (s.userData.mark) return false;
+    marks = marks.slice(0, i) + game.current + marks.slice(i + 1);
+    commit({ marks, last: i });
+    return true;
+  }
+
+  function makeMove(face, prime) {
+    if (!canAct('move')) return false;
+    commit({
+      moves: [...game.moves, { f: face, p: !!prime, by: game.current }],
+      current: other(game.current),
+      phase: 'place',
+    });
+    return true;
+  }
+
+  function newGame() {
+    commit({ round: game.round + 1, marks: EMPTY_MARKS, moves: [], current: 'X', phase: 'place', last: -1 });
+  }
+  newGameBtn.addEventListener('click', newGame);
+  document.getElementById('bannerNew').addEventListener('click', () => {
+    if (mode === 'p2p' && net && net.kind === 'match') {
+      if (nextGameReady()) playMatch(net.matchId);
+      else openTourPanel();
+    } else newGame();
+  });
+
+  // Claiming a seat: take a short lease so two people clicking at once can't both get it.
+  async function claimSeat(p) {
+    if (mode !== 'online' || !myId || busy) return;
+    busy = true;
+    try {
+      const lock = await db.doc('locks/seats').acquire({ holder: myId, ttlMs: 5000 });
+      if (!lock.acquired) { showNote('Iemand anders kiest net een plaats. Probeer het zo opnieuw.'); return; }
+      const snap = await gameRef.get();
+      const d = normalize(snap.exists ? snap.data() : null);
+      if (d.seats[p] && d.seats[p] !== myId) { showNote('Die plaats is net ingenomen.'); return; }
+      const seats = { ...d.seats, [p]: myId };
+      if (seats[other(p)] === myId) seats[other(p)] = null; // one seat per person
+      if (snap.exists) await gameRef.update({ seats });
+      else await gameRef.set({ ...d, seats });
+      showNote('');
+    } catch (e) {
+      reportWriteError(e);
+    } finally {
+      busy = false;
+      updateUI();
+    }
+  }
+
+  async function leaveSeat(p) {
+    if (mode !== 'online') return;
+    await commit({ seats: { ...game.seats, [p]: null } });
+  }
+
+  // ---------- Input: drag to rotate view, click to place ----------
+  const raycaster = new THREE.Raycaster();
+  const ndc = new THREE.Vector2();
+  let pointer = null; // { id, x, y, startX, startY, moved }
+  let hovered = null;
+
+  function pickSticker(clientX, clientY) {
+    const r = renderer.domElement.getBoundingClientRect();
+    ndc.set(((clientX - r.left) / r.width) * 2 - 1, -((clientY - r.top) / r.height) * 2 + 1);
+    raycaster.setFromCamera(ndc, camera);
+    const hit = raycaster.intersectObjects(pickables, false)[0];
+    return hit && hit.object.userData.isSticker ? hit.object : null;
+  }
+
+  function setHover(s) {
+    if (s === hovered) return;
+    const prev = hovered;
+    hovered = s;
+    if (prev) { prev.userData.hover = null; drawSticker(prev); }
+    if (s) { s.userData.hover = game.current; drawSticker(s); }
+    stage.classList.toggle('can-place', !!s);
+  }
+
+  stage.addEventListener('pointerdown', e => {
+    if (pointer) return;
+    pointer = { id: e.pointerId, x: e.clientX, y: e.clientY, startX: e.clientX, startY: e.clientY, moved: false };
+    stage.setPointerCapture(e.pointerId);
+  });
+
+  const qTmp = new THREE.Quaternion(), X_AXIS = new THREE.Vector3(1, 0, 0), Y_AXIS = new THREE.Vector3(0, 1, 0);
+  stage.addEventListener('pointermove', e => {
+    if (pointer && e.pointerId === pointer.id) {
+      if (!pointer.moved && Math.hypot(e.clientX - pointer.startX, e.clientY - pointer.startY) > 5) {
+        pointer.moved = true;
+        stage.classList.add('dragging');
+        setHover(null);
+      }
+      if (pointer.moved) {
+        const dx = e.clientX - pointer.x, dy = e.clientY - pointer.y;
+        const speed = 0.008;
+        qTmp.setFromAxisAngle(Y_AXIS, dx * speed);
+        cubeGroup.quaternion.premultiply(qTmp);
+        qTmp.setFromAxisAngle(X_AXIS, dy * speed);
+        cubeGroup.quaternion.premultiply(qTmp);
+      }
+      pointer.x = e.clientX; pointer.y = e.clientY;
+      return;
+    }
+    if (e.pointerType === 'mouse') {
+      const s = canAct('place') || canAct('move') ? pickSticker(e.clientX, e.clientY) : null;
+      setHover(s && (!s.userData.mark || (canAct('move') && s.userData.index === game.last)) ? s : null);
+    }
+  });
+
+  function endPointer(e, cancelled) {
+    if (!pointer || e.pointerId !== pointer.id) return;
+    const wasClick = !pointer.moved && !cancelled;
+    pointer = null;
+    stage.classList.remove('dragging');
+    if (!wasClick) return;
+    const s = pickSticker(e.clientX, e.clientY);
+    if (canAct('place')) placeMark(s);
+    else changeMark(s);
+  }
+  stage.addEventListener('pointerup', e => endPointer(e, false));
+  stage.addEventListener('pointercancel', e => endPointer(e, true));
+  stage.addEventListener('pointerleave', () => { if (!pointer) setHover(null); });
+
+  stage.addEventListener('wheel', e => {
+    e.preventDefault();
+    camera.position.z = Math.max(6, Math.min(22, camera.position.z * (1 + Math.sign(e.deltaY) * 0.08)));
+  }, { passive: false });
+
+  window.addEventListener('keydown', e => {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT')) return;
+    if (!tourPanel.hidden) return;
+    const k = e.key.toUpperCase();
+    if (FACES[k]) { e.preventDefault(); makeMove(k, e.shiftKey); }
+  });
+
+  // ---------- Loop ----------
+  function tick(now) {
+    if (anim) {
+      const t = Math.min(1, (now - anim.start) / anim.dur);
+      const eased = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+      anim.pivot.quaternion.setFromAxisAngle(anim.axis, anim.angle * eased);
+      if (t >= 1) finishMoveAnimation();
+    }
+    renderer.render(scene, camera);
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+
+  // ---------- Online play over public relays (no account needed) ----------
+  // Every message goes to three free public MQTT brokers at once over secure websockets. Whichever are
+  // reachable carry the game, so one broker being down or blocked doesn't stop play, on wifi or mobile data.
+  // Brokers keep the latest ("retained") board per game, so a player who reloads or arrives late gets it.
+  const BROKERS = ['wss://broker.hivemq.com:8884/mqtt', 'wss://broker.emqx.io:8084/mqtt', 'wss://test.mosquitto.org:8081/mqtt'];
+  const TOPIC_ROOT = 'kubus-kaas-en-eieren/v2/';
+  const CONNECT_TIMEOUT_MS = 12000;
+  const RETAINED_WAIT_MS = 2500;
+  const NET_ERR = 'Geen verbinding met de spelservers. Controleer je internet (wifi of mobiele data). Sommige school- of werknetwerken blokkeren dit; probeer dan mobiele data.';
+
+  function makeCode() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let s = '';
+    const rnd = new Uint32Array(6);
+    crypto.getRandomValues(rnd);
+    for (const r of rnd) s += chars[r % chars.length];
+    return s;
+  }
+  const clientId = makeCode() + makeCode();
+  const waitFor = (cond, ms) => new Promise(resolve => {
+    const t0 = Date.now();
+    const iv = setInterval(() => { if (cond() || Date.now() - t0 > ms) { clearInterval(iv); resolve(cond()); } }, 100);
+  });
+  const store = {
+    get(k) { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch (_) { return null; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (_) { /* optional */ } },
+  };
+  const onlineSupported = () => typeof window.mqtt !== 'undefined' && typeof WebSocket === 'function' && !(window.claude && typeof window.claude.use === 'function');
+
+  const relay = {
+    clients: [], handlers: new Map(), seen: new Set(), seenOrder: [], started: false,
+    start() {
+      if (this.started || !onlineSupported()) return;
+      this.started = true;
+      BROKERS.forEach((url, i) => {
+        let c;
+        try {
+          c = mqtt.connect(url, { clientId: 'kke_' + clientId + '_' + i, clean: true, connectTimeout: 8000, reconnectPeriod: 3000, keepalive: 30 });
+        } catch (_) { return; }
+        c.on('connect', () => {
+          for (const t of this.handlers.keys()) c.subscribe(TOPIC_ROOT + t, { qos: 1 });
+          updateUI();
+        });
+        c.on('close', () => updateUI());
+        c.on('error', () => { /* reconnects on its own */ });
+        c.on('message', (topic, buf) => this.receive(topic, buf));
+        this.clients.push(c);
+      });
+    },
+    connectedCount() { return this.clients.filter(c => c.connected).length; },
+    subscribe(topic, fn) {
+      this.handlers.set(topic, fn);
+      for (const c of this.clients) if (c.connected) c.subscribe(TOPIC_ROOT + topic, { qos: 1 });
+    },
+    unsubscribe(topic) {
+      if (!this.handlers.delete(topic)) return;
+      for (const c of this.clients) if (c.connected) c.unsubscribe(TOPIC_ROOT + topic);
+    },
+    publish(topic, payload, retain) {
+      const body = JSON.stringify({ ...payload, id: makeCode() + makeCode(), from: clientId });
+      for (const c of this.clients) c.publish(TOPIC_ROOT + topic, body, { qos: 1, retain: !!retain });
+    },
+    receive(fullTopic, buf) {
+      const fn = this.handlers.get(fullTopic.slice(TOPIC_ROOT.length));
+      if (!fn) return;
+      let p;
+      try { p = JSON.parse(String(buf)); } catch (_) { return; }
+      if (!p || typeof p.id !== 'string' || this.seen.has(p.id)) return; // same message via another broker
+      this.seen.add(p.id); this.seenOrder.push(p.id);
+      if (this.seenOrder.length > 3000) this.seen.delete(this.seenOrder.shift());
+      fn(p);
+    },
+  };
+
+  // ---------- Online game: 1-on-1 with a code, or a tournament match ----------
+  // net = { kind: 'code'|'match', topic, side, hosting, joined, opponentSeen, gotState, code, matchId, opponent }
+  let net = null;
+  const p2pPanel = document.getElementById('p2p');
+  const p2pStart = document.getElementById('p2pStart');
+  const p2pInfo = document.getElementById('p2pInfo');
+  const p2pText = document.getElementById('p2pText');
+  const copyBtn = document.getElementById('copyCode');
+  const scheduleBtn = document.getElementById('openSchedule');
+  const shareBtn = document.getElementById('shareLink');
+  const leaveBtn = document.getElementById('leaveP2P');
+  const joinInput = document.getElementById('joinCode');
+
+  function netReady() {
+    if (mode !== 'p2p' || !net) return false;
+    if (net.kind === 'code' && net.hosting) return net.opponentSeen;
+    return net.joined;
+  }
+
+  const publishGame = () => { if (net) relay.publish(net.topic + '/state', { t: 'state', game }, true); };
+
+  function enterNet(cfg) {
+    leaveNet();
+    relay.start();
+    const n = net = { hosting: false, joined: false, opponentSeen: false, gotState: false, ...cfg };
+    mode = 'p2p';
+    showNote('');
+    game = normalize(null); // fresh board until the shared one arrives
+    applied.round = null;
+    relay.subscribe(n.topic + '/state', p => {
+      if (net !== n || p.t !== 'state' || !p.game) return;
+      n.gotState = true;
+      if (p.from !== clientId) n.opponentSeen = true;
+      const incoming = normalize(p.game);
+      if (incoming.ver > game.ver) { game = incoming; sync(); }
+      else updateUI();
+    });
+    relay.subscribe(n.topic + '/hello', p => {
+      if (net !== n || p.from === clientId) return;
+      const first = !n.opponentSeen;
+      n.opponentSeen = true;
+      if (n.hosting || n.kind === 'match') publishGame(); // the newcomer gets the current board right away
+      if (first && n.kind === 'match') relay.publish(n.topic + '/hello', { t: 'hello' });
+      updateUI();
+    });
+    setTimeout(() => { if (net === n && !relay.connectedCount()) showNote(NET_ERR); }, CONNECT_TIMEOUT_MS);
+    sync();
+  }
+
+  function leaveNet() {
+    if (!net) return;
+    relay.unsubscribe(net.topic + '/state');
+    relay.unsubscribe(net.topic + '/hello');
+    net = null;
+  }
+
+  function stopNet(keepNote) {
+    leaveNet();
+    if (!keepNote) showNote('');
+    mode = 'local';
+    sync();
+  }
+
+  // 1-on-1: remember which side this browser played per code, so a reload can resume as the same player.
+  const savedSide = code => (store.get('kke-sides') || {})[code] || null;
+  const saveSide = (code, side) => { const m = store.get('kke-sides') || {}; m[code] = side; store.set('kke-sides', m); };
+
+  function hostGame() {
+    if (!onlineSupported()) return;
+    const code = makeCode();
+    saveSide(code, 'X');
+    enterNet({ kind: 'code', code, topic: 'game/' + code, side: 'X', hosting: true });
+    game = normalize({ round: 1, ver: 1 });
+    sync();
+    publishGame(); // retained, so the opponent finds the board when joining
+  }
+
+  async function joinGame() {
+    const code = joinInput.value.trim().toUpperCase();
+    if (!/^[A-Z0-9]{6}$/.test(code)) { showNote('Vul de code van 6 tekens in die je tegenstander ziet.'); return; }
+    const side = savedSide(code) || 'O';
+    enterNet({ kind: 'code', code, topic: 'game/' + code, side });
+    const n = net;
+    updateUI();
+    if (!(await waitFor(() => relay.connectedCount() > 0, CONNECT_TIMEOUT_MS))) { if (net === n) { showNote(NET_ERR); stopNet(true); } return; }
+    await waitFor(() => n.gotState, RETAINED_WAIT_MS);
+    if (net !== n) return;
+    if (!n.gotState) {
+      showNote(`Geen spel gevonden met code ${code}. Controleer de code en of je tegenstander op "Online spel starten" heeft geklikt.`);
+      stopNet(true);
+      return;
+    }
+    saveSide(code, side);
+    n.joined = true;
+    relay.publish(n.topic + '/hello', { t: 'hello' });
+    updateUI();
+  }
+
+  function renderNet() {
+    const show = (mode === 'local' || mode === 'p2p') && onlineSupported();
+    p2pPanel.hidden = !show;
+    if (!show) return;
+    const inNet = mode === 'p2p' && !!net;
+    p2pStart.hidden = inNet;
+    p2pInfo.hidden = !inNet;
+    if (!inNet) return;
+    const isMatch = net.kind === 'match';
+    copyBtn.hidden = !(net.kind === 'code' && net.hosting);
+    shareBtn.hidden = copyBtn.hidden || !canShareLinks();
+    scheduleBtn.hidden = !isMatch;
+    leaveBtn.hidden = isMatch;
+    const side = `<b class="${net.side}-text">${net.side}</b>`;
+    if (isMatch) {
+      const loc = tour && findMatch(net.matchId);
+      let rn = '', score = '';
+      if (loc) {
+        const m = loc.m, mine = m.a === tourPlayerId ? 'a' : 'b';
+        rn = roundName(loc.r) + (m.bestOf > 1 ? ` · game ${net.gameNo + 1} (best of ${m.bestOf})` : '') + ' · ';
+        if (m.bestOf > 1) score = ` · stand ${m.wins[mine]}–${m.wins[mine === 'a' ? 'b' : 'a']}`;
+      }
+      p2pText.innerHTML = `${escapeHtml(rn)}jij (${side}) tegen ${escapeHtml(net.opponent)}${score}`;
+    } else if (net.hosting) {
+      p2pText.innerHTML = netReady()
+        ? `Code <code>${net.code}</code> · tegenstander verbonden · jij bent ${side}`
+        : `Geef deze code aan je tegenstander: <code>${net.code}</code>`;
+    } else {
+      p2pText.innerHTML = net.joined
+        ? `Verbonden met spel <code>${net.code}</code> · jij bent ${side}`
+        : `Verbinden met <code>${net.code}</code>…`;
+    }
+  }
+
+  document.getElementById('hostBtn').addEventListener('click', hostGame);
+  document.getElementById('joinBtn').addEventListener('click', joinGame);
+  joinInput.addEventListener('keydown', e => { if (e.key === 'Enter') joinGame(); });
+  leaveBtn.addEventListener('click', () => stopNet(false));
+  scheduleBtn.addEventListener('click', () => openTourPanel());
+  copyBtn.addEventListener('click', () => copyText(net && net.code, copyBtn, 'Kopieer code'));
+  shareBtn.addEventListener('click', () => net && shareLink('g', net.code, shareBtn, 'Deel link'));
+
+  async function copyText(text, btn, label) {
+    if (!text) return;
+    try { await navigator.clipboard.writeText(text); btn.textContent = 'Gekopieerd'; }
+    catch (_) { btn.textContent = text; }
+    setTimeout(() => { btn.textContent = label; }, 1500);
+  }
+
+  // ---------- Links, installing as an app ----------
+  // When the game is hosted on a website, a code can travel as a link: #g-CODE joins a 1-on-1 game,
+  // #t-CODE opens the tournament screen with the code filled in.
+  const canShareLinks = () => /^https?:$/.test(location.protocol) && !(window.claude && typeof window.claude.use === 'function');
+
+  async function shareLink(kind, code, btn, label) {
+    if (!code) return;
+    const url = location.origin + location.pathname + '#' + kind + '-' + code;
+    const text = kind === 't'
+      ? `Doe mee met mijn toernooi Kubus Kaas en Eieren! Code: ${code}`
+      : `Speel Kubus Kaas en Eieren tegen me! Code: ${code}`;
+    if (navigator.share) {
+      try { await navigator.share({ title: 'Kubus Kaas en Eieren', text, url }); return; }
+      catch (e) { if (e && e.name === 'AbortError') return; }
+    }
+    copyText(url, btn, label);
+  }
+
+  function openFromLink() {
+    const m = /^#([gt])-([A-Za-z0-9]{6})$/.exec(location.hash);
+    if (!m || !onlineSupported()) return;
+    const code = m[2].toUpperCase();
+    if (m[1] === 'g') { joinInput.value = code; joinGame(); }
+    else {
+      openTourPanel();
+      if (tourView === 'menu') {
+        document.getElementById('tCode').value = code;
+        document.getElementById('tName').focus();
+      }
+    }
+  }
+
+  let installPrompt = null;
+  const installBtn = document.getElementById('installBtn');
+  const isStandalone = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+  const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installPrompt = e; updateUI(); });
+  window.addEventListener('appinstalled', () => { installPrompt = null; showNote(''); updateUI(); });
+  installBtn.addEventListener('click', async () => {
+    if (installPrompt) {
+      installPrompt.prompt();
+      try { await installPrompt.userChoice; } catch (_) {}
+      installPrompt = null;
+      updateUI();
+    } else if (isIOS()) {
+      showNote('Tik in Safari onderaan op de deelknop (vierkantje met pijl) en kies "Zet op beginscherm".');
+    }
+  });
+  function renderInstall() {
+    installBtn.hidden = !canShareLinks() || isStandalone() || !(installPrompt || isIOS());
+  }
+
+  if ('serviceWorker' in navigator && canShareLinks() && document.querySelector('link[rel="manifest"]')) {
+    navigator.serviceWorker.register('sw.js').catch(() => { /* app still works online */ });
+  }
+
+  // ---------- Tournament ----------
+  // The organizer's device runs the bracket and publishes it (retained) on tour/<code>/state.
+  // Players announce themselves on /join and report match results on /result. They repeat both until
+  // the organizer's bracket shows them, so nothing is lost while the organizer reconnects or reloads.
+  // Each match is an ordinary online game on its own channel, tour/<code>/m/<match id>.
+  let tour = null;          // latest bracket: { code, size, phase: 'lobby'|'running'|'done', players, rounds, champion, ver }
+  let tourCode = null;
+  let tourRole = null;      // 'org' | 'player'
+  let tourPlayerId = null;  // my id in the bracket (the organizer may play too)
+  let tourName = '';
+  let tourView = 'menu';    // 'menu' | 'tour'
+  let tourNoteText = '';
+  let tourTimer = null;
+  let pendingResults = {};  // matchId -> { winner, draw } still to be confirmed by the organizer
+  const tourPanel = document.getElementById('tourPanel');
+  const tourBody = document.getElementById('tourBody');
+  const tourBtn = document.getElementById('tourBtn');
+  const ROUND_NAMES = ['Finale', 'Halve finale', 'Kwartfinale', 'Achtste finale'];
+
+  const cleanName = s => String(s || '').replace(/\s+/g, ' ').trim().slice(0, 20);
+  const playerName = id => { const p = tour && tour.players.find(x => x.id === id); return p ? p.name : '?'; };
+  const roundName = r => ROUND_NAMES[tour.rounds.length - 1 - r] || `Ronde ${r + 1}`;
+  const tourTopic = sub => 'tour/' + tourCode + '/' + sub;
+  const saveTourRole = () => store.set('kke-tour-' + tourCode, { role: tourRole, playerId: tourPlayerId, name: tourName });
+
+  function findMatch(id) {
+    if (!tour) return null;
+    for (let r = 0; r < tour.rounds.length; r++) {
+      const i = tour.rounds[r].findIndex(m => m.id === id);
+      if (i >= 0) return { r, i, m: tour.rounds[r][i] };
+    }
+    return null;
+  }
+
+  function myActiveMatch() {
+    if (!tour || tour.phase !== 'running' || !tourPlayerId) return null;
+    for (let r = 0; r < tour.rounds.length; r++) {
+      for (let i = 0; i < tour.rounds[r].length; i++) {
+        const m = tour.rounds[r][i];
+        if ((m.a === tourPlayerId || m.b === tourPlayerId) && m.a && m.b && !m.winner) return { r, i, m };
+      }
+    }
+    return null;
+  }
+
+  function randomInt(n) { const a = new Uint32Array(1); crypto.getRandomValues(a); return a[0] % n; }
+
+  function setTourNote(text) {
+    tourNoteText = text || '';
+    const el = document.getElementById('tNote');
+    if (el) el.textContent = tourNoteText;
+  }
+
+  function openTourPanel() {
+    if (!onlineSupported()) return;
+    tourView = tourCode ? 'tour' : 'menu';
+    tourPanel.hidden = false;
+    setHover(null);
+    renderTour();
+  }
+  function closeTourPanel() { tourPanel.hidden = true; }
+
+  function subscribeTour() {
+    relay.subscribe(tourTopic('state'), p => {
+      if (p.t !== 'tour' || !p.tour || p.tour.code !== tourCode) return;
+      if (tour && p.tour.ver <= tour.ver) return;
+      tour = p.tour;
+      afterTourChange();
+    });
+    if (tourRole === 'org') {
+      relay.subscribe(tourTopic('join'), onJoin);
+      relay.subscribe(tourTopic('result'), onResult);
+    }
+  }
+
+  function leaveTour() {
+    if (tourCode) ['state', 'join', 'result'].forEach(s => relay.unsubscribe(tourTopic(s)));
+    clearInterval(tourTimer);
+    tourTimer = null;
+    if (mode === 'p2p' && net && net.kind === 'match') stopNet(true);
+    tour = null; tourCode = null; tourRole = null; tourPlayerId = null; tourName = ''; pendingResults = {};
+  }
+
+  // --- organizer ---
+  function publishTour() { relay.publish(tourTopic('state'), { t: 'tour', tour }, true); }
+  function bumpTour() { tour.ver++; publishTour(); afterTourChange(); }
+
+  function createTour() {
+    const name = cleanName(document.getElementById('tOrgName').value);
+    const plays = document.getElementById('tPlays').checked;
+    const size = document.getElementById('tSize').value === '16' ? 16 : 8;
+    if (plays && !name) { setTourNote('Vul je naam in, of zet "Ik speel zelf mee" uit.'); return; }
+    relay.start();
+    leaveTour();
+    tourCode = makeCode();
+    tourRole = 'org';
+    tourPlayerId = plays ? 'p' + makeCode() + makeCode() : null;
+    tourName = name;
+    const reward = String(document.getElementById('tReward').value || '').replace(/\s+/g, ' ').trim().slice(0, 80) || null;
+    tour = { code: tourCode, size, reward, phase: 'lobby', players: plays ? [{ id: tourPlayerId, name }] : [], rounds: [], champion: null, ver: 1 };
+    saveTourRole();
+    subscribeTour();
+    publishTour();
+    tourView = 'tour';
+    setTourNote('');
+    afterTourChange();
+    setTimeout(() => { if (tourRole === 'org' && !relay.connectedCount()) setTourNote(NET_ERR); }, CONNECT_TIMEOUT_MS);
+  }
+
+  function onJoin(p) {
+    if (tourRole !== 'org' || !tour || typeof p.playerId !== 'string') return;
+    const name = cleanName(p.name);
+    if (!name) return;
+    const existing = tour.players.find(x => x.id === p.playerId);
+    if (existing) {
+      if (existing.name !== name && tour.phase === 'lobby') { existing.name = name; bumpTour(); }
+      else publishTour();
+      return;
+    }
+    if (tour.phase !== 'lobby' || tour.players.length >= tour.size) { publishTour(); return; }
+    let unique = name, k = 2;
+    while (tour.players.some(x => x.name.toLowerCase() === unique.toLowerCase())) unique = `${name} ${k++}`;
+    tour.players.push({ id: p.playerId, name: unique });
+    bumpTour();
+  }
+
+  // A match is a series of games (best of 1, 3 or 5). X alternates: player a starts game 1, b game 2, ...
+  const xSlotOf = gameNo => gameNo % 2 === 0 ? 'a' : 'b';
+  const winsNeeded = m => Math.ceil((m.bestOf || 1) / 2);
+
+  function onResult(p) {
+    if (tourRole !== 'org' || !tour || tour.phase !== 'running') return;
+    const loc = findMatch(p.matchId);
+    if (!loc) return;
+    const m = loc.m;
+    const gameNo = Number.isInteger(p.game) ? p.game : 0;
+    // Already decided, or a game we already counted: re-send so the reporter sees it.
+    if (m.winner || !m.a || !m.b || gameNo !== m.games.length) { publishTour(); return; }
+    const xSlot = xSlotOf(gameNo), oSlot = xSlot === 'a' ? 'b' : 'a';
+    let slot, how = 'win';
+    if (p.winner === 'X') slot = xSlot;
+    else if (p.winner === 'O') slot = oSlot;
+    else if (p.draw) { slot = randomInt(2) ? 'a' : 'b'; how = 'coin'; } // draw: a coin flip decides the game
+    else return;
+    m.games.push({ winner: slot, how });
+    m.wins[slot]++;
+    if (m.wins[slot] >= winsNeeded(m)) {
+      m.winner = m[slot];
+      m.how = m.bestOf > 1 ? 'series' : how;
+      advance(loc.r, loc.i);
+    }
+    bumpTour();
+  }
+
+  function advance(r, i) {
+    const m = tour.rounds[r][i];
+    if (r === tour.rounds.length - 1) { tour.champion = m.winner; tour.phase = 'done'; return; }
+    tour.rounds[r + 1][i >> 1][i % 2 === 0 ? 'a' : 'b'] = m.winner;
+  }
+
+  function startTour() {
+    if (tourRole !== 'org' || !tour || tour.phase !== 'lobby' || tour.players.length < 2) return;
+    const ids = tour.players.map(p => p.id);
+    for (let i = ids.length - 1; i > 0; i--) { const j = randomInt(i + 1); [ids[i], ids[j]] = [ids[j], ids[i]]; }
+    // Smallest bracket that fits everyone; empty spots become byes (that player goes straight through).
+    let size = 2;
+    while (size < ids.length) size *= 2;
+    const half = size / 2;
+    const roundCount = Math.log2(size);
+    // Final: best of 5. Semi-finals: best of 3. Earlier rounds: a single game.
+    const bestOf = r => r === roundCount - 1 ? 5 : r === roundCount - 2 ? 3 : 1;
+    const newMatch = (r, i, a, b) => ({ id: `r${r}m${i}`, a, b, winner: null, how: null, bestOf: bestOf(r), wins: { a: 0, b: 0 }, games: [] });
+    const rounds = [Array.from({ length: half }, (_, i) => newMatch(0, i, ids[i] || null, ids[half + i] || null))];
+    for (let r = 1, n = half / 2; n >= 1; r++, n /= 2) {
+      rounds.push(Array.from({ length: n }, (_, i) => newMatch(r, i, null, null)));
+    }
+    tour.rounds = rounds;
+    tour.phase = 'running';
+    rounds[0].forEach((m, i) => { if (m.a && !m.b) { m.winner = m.a; m.how = 'bye'; advance(0, i); } });
+    bumpTour();
+  }
+
+  // --- players ---
+  async function joinTour() {
+    const code = document.getElementById('tCode').value.trim().toUpperCase();
+    const name = cleanName(document.getElementById('tName').value);
+    if (!/^[A-Z0-9]{6}$/.test(code)) { setTourNote('Vul de toernooicode van 6 tekens in.'); return; }
+    const saved = store.get('kke-tour-' + code);
+    if (!saved && !name) { setTourNote('Vul je naam in.'); return; }
+    relay.start();
+    leaveTour();
+    tourCode = code;
+    if (saved && saved.role === 'org') { // this browser organizes this tournament: take it up again
+      tourRole = 'org'; tourPlayerId = saved.playerId; tourName = saved.name || '';
+    } else {
+      tourRole = 'player';
+      tourPlayerId = (saved && saved.playerId) || 'p' + makeCode() + makeCode();
+      tourName = name || (saved && saved.name) || '';
+    }
+    tourView = 'tour';
+    setTourNote('');
+    subscribeTour();
+    renderTour();
+    if (!(await waitFor(() => relay.connectedCount() > 0, CONNECT_TIMEOUT_MS))) { if (tourCode === code) setTourNote(NET_ERR); return; }
+    await waitFor(() => !!tour, RETAINED_WAIT_MS);
+    if (tourCode !== code) return;
+    if (!tour) {
+      leaveTour();
+      tourView = 'menu';
+      renderTour();
+      setTourNote(`Geen toernooi gevonden met code ${code}. Controleer de code.`);
+      return;
+    }
+    saveTourRole();
+    if (tourRole === 'org') publishTour();
+    tourTick();
+    tourTimer = setInterval(tourTick, 4000);
+  }
+
+  // Repeats what the organizer hasn't confirmed yet: joining the lobby and match results.
+  function tourTick() {
+    if (!tour || !tourCode) return;
+    if (tourRole === 'player' && tour.phase === 'lobby' && tourName &&
+        !tour.players.some(p => p.id === tourPlayerId) && tour.players.length < tour.size) {
+      relay.publish(tourTopic('join'), { t: 'join', playerId: tourPlayerId, name: tourName });
+    }
+    for (const [key, r] of Object.entries(pendingResults)) {
+      const loc = findMatch(r.matchId);
+      if (!loc || loc.m.winner || loc.m.games.length > r.game) { delete pendingResults[key]; continue; }
+      if (tourRole === 'org') onResult(r);
+      else relay.publish(tourTopic('result'), { t: 'result', ...r });
+    }
+  }
+
+  function reportMatchResult(matchId, gameNo, winner) {
+    const key = matchId + '#' + gameNo;
+    if (!tour || pendingResults[key]) return;
+    const loc = findMatch(matchId);
+    if (!loc || loc.m.winner || loc.m.games.length > gameNo) return;
+    pendingResults[key] = { matchId, game: gameNo, winner: winner || null, draw: !winner };
+    tourTick();
+  }
+
+  // The series this device is playing goes on, and the organizer has counted the game just played.
+  function nextGameReady() {
+    if (!(mode === 'p2p' && net && net.kind === 'match')) return false;
+    const loc = findMatch(net.matchId);
+    return !!loc && !loc.m.winner && loc.m.games.length > net.gameNo;
+  }
+
+  async function playMatch(id) {
+    const loc = findMatch(id);
+    if (!loc || loc.m.winner) return;
+    const m = loc.m;
+    const gameNo = m.games.length;
+    const side = m[xSlotOf(gameNo)] === tourPlayerId ? 'X' : 'O';
+    enterNet({
+      kind: 'match', code: tourCode, matchId: m.id, gameNo, topic: tourTopic('m/' + m.id + '/g' + gameNo), side,
+      opponent: playerName(m.a === tourPlayerId ? m.b : m.a),
+    });
+    const n = net;
+    closeTourPanel();
+    updateUI();
+    if (!(await waitFor(() => relay.connectedCount() > 0, CONNECT_TIMEOUT_MS))) { if (net === n) showNote(NET_ERR); return; }
+    await waitFor(() => n.gotState, RETAINED_WAIT_MS);
+    if (net !== n) return;
+    if (!n.gotState && side === 'X') { game = normalize({ round: 1, ver: 1 }); sync(); publishGame(); } // X opens the board
+    n.joined = true;
+    relay.publish(n.topic + '/hello', { t: 'hello' });
+    updateUI();
+  }
+
+  function afterTourChange() {
+    if (tour && tourRole === 'player' && tour.players.some(p => p.id === tourPlayerId)) saveTourRole();
+    tourTick();
+    // A drawn game was settled by a coin: tell the two players who it picked.
+    if (mode === 'p2p' && net && net.kind === 'match') {
+      const loc = findMatch(net.matchId);
+      const g = loc && loc.m.games[net.gameNo];
+      if (g && g.how === 'coin') showNote(`Gelijkspel: de munt gaf deze game aan ${playerName(loc.m[g.winner])}.`);
+    }
+    if (!tourPanel.hidden && tourView === 'tour') renderTour();
+    updateUI();
+  }
+
+  function renderTourButton() {
+    tourBtn.hidden = !onlineSupported() || mode === 'online' || mode === 'connecting';
+    const active = myActiveMatch();
+    const ready = !!active && !(mode === 'p2p' && net && net.kind === 'match' && net.matchId === active.m.id && net.gameNo === active.m.games.length);
+    tourBtn.classList.toggle('ready', ready);
+    tourBtn.textContent = ready ? 'Jouw wedstrijd!' : 'Toernooi';
+  }
+  tourBtn.addEventListener('click', openTourPanel);
+
+  // --- tournament panel ---
+  function renderTour() {
+    if (tourPanel.hidden) return;
+    if (tourView === 'menu') { renderTourMenu(); return; }
+    const me = tourPlayerId;
+    let html = `<div class="tp-head"><h2>Toernooi <code>${escapeHtml(tourCode || '')}</code></h2>
+      <div class="acts"><button type="button" data-act="copy">Kopieer code</button>${canShareLinks() ? '<button type="button" data-act="share">Deel link</button>' : ''}<button type="button" data-act="close">Terug naar de kubus</button></div></div>
+      <p class="tp-note" id="tNote">${escapeHtml(tourNoteText)}</p>`;
+    if (!tour) {
+      html += `<div class="tp-card"><p>Verbinden met het toernooi…</p></div>`;
+    } else if (tour.phase === 'lobby') {
+      const inList = tour.players.some(p => p.id === me);
+      const n = tour.players.length;
+      let info;
+      if (tourRole === 'org') {
+        info = `<p>Geef de code <code>${escapeHtml(tourCode)}</code> aan de spelers. Zij openen dit spel, kiezen <b>Toernooi</b> → <b>Meedoen</b> en vullen hun naam in.</p>
+          <p>Niet vol? Dan krijgen sommige spelers een vrije ronde en gaan ze direct door.</p>
+          <button type="button" class="primary" data-act="start" ${n < 2 ? 'disabled' : ''}>Start toernooi met ${n} speler${n === 1 ? '' : 's'}</button>`;
+      } else if (inList) info = `<p>Je doet mee als <b>${escapeHtml(tourName)}</b>. Wachten tot de organisator het toernooi start…</p>`;
+      else if (n >= tour.size) info = `<p>Dit toernooi is vol.</p>`;
+      else info = `<p>Aanmelden als <b>${escapeHtml(tourName)}</b>…</p>`;
+      html += `<div class="tp-card tp-me"><h3>Spelers ${n}/${tour.size}</h3>
+        <div class="players">${tour.players.map(p => `<span class="${p.id === me ? 'me' : ''}">${escapeHtml(p.name)}${p.id === me ? ' (jij)' : ''}</span>`).join('') || '<span>Nog niemand</span>'}</div>
+        ${info}</div>` + renderTourRules();
+    } else {
+      html += renderTourStatus() + renderBracket() + renderTourRules();
+    }
+    html += `<div><button type="button" data-act="leave">${tourRole === 'org' ? 'Toernooi sluiten op dit apparaat' : 'Toernooi verlaten'}</button></div>`;
+    tourBody.innerHTML = html;
+  }
+
+  function renderTourStatus() {
+    const me = tourPlayerId;
+    let body;
+    if (tour.phase === 'done') {
+      body = `<div class="champion">Kampioen: ${escapeHtml(playerName(tour.champion))}${tour.champion === me ? ' (jij!)' : ''}</div>`;
+      if (tour.reward) body += `<p class="big" style="text-align:center">Prijs: <b>${escapeHtml(tour.reward)}</b></p>`;
+    } else {
+      const active = myActiveMatch();
+      const inBracket = me && tour.rounds[0].some(m => m.a === me || m.b === me);
+      const out = inBracket && tour.rounds.some(rd => rd.some(m => m.winner && m.winner !== me && (m.a === me || m.b === me)));
+      if (active) {
+        const m = active.m;
+        const mine = m.a === me ? 'a' : 'b', theirs = mine === 'a' ? 'b' : 'a';
+        const series = m.bestOf > 1
+          ? `<p>Best of ${m.bestOf}: wie het eerst ${winsNeeded(m)} games wint, gaat door. Stand <b>${m.wins[mine]}–${m.wins[theirs]}</b>.</p>` : '';
+        const label = m.bestOf > 1 ? `Speel game ${m.games.length + 1}` : 'Speel je wedstrijd';
+        body = `<p class="big">${escapeHtml(roundName(active.r))}: jij tegen <b>${escapeHtml(playerName(m[theirs]))}</b></p>${series}
+          <button type="button" class="primary" data-act="play" data-id="${m.id}">${label}</button>`;
+      } else if (out) body = `<p class="big">Je bent uitgeschakeld.</p><p>Je kunt het toernooi hier blijven volgen.</p>`;
+      else if (inBracket) body = `<p class="big">Je bent door! Wachten op je volgende tegenstander…</p>`;
+      else body = `<p class="big">Je kijkt mee.</p>`;
+    }
+    const orgNote = tourRole === 'org' && tour.phase !== 'done'
+      ? `<p>Jij bent de organisator. Houd deze pagina open, dan worden alle uitslagen verwerkt.</p>` : '';
+    return `<div class="tp-card tp-me">${body}${orgNote}</div>`;
+  }
+
+  function renderBracket() {
+    const me = tourPlayerId;
+    const slot = (m, key) => {
+      const id = m[key];
+      const cls = ['slot'];
+      if (!id) cls.push('empty');
+      else if (m.winner === id) cls.push('win');
+      else if (m.winner) cls.push('lose');
+      if (id && id === me) cls.push('me');
+      const name = id ? playerName(id) : (m.how === 'bye' ? 'vrije ronde' : 'nog onbekend');
+      // Series show the score; single games show who started as X.
+      const right = m.bestOf > 1 ? (m.a && m.b ? String(m.wins[key]) : '') : (key === 'a' ? 'X' : 'O');
+      return `<div class="${cls.join(' ')}"><span class="nm">${escapeHtml(name)}</span><span class="side">${right}</span></div>`;
+    };
+    const tag = m => {
+      if (m.how === 'bye') return 'vrije ronde';
+      const coins = (m.games || []).filter(g => g.how === 'coin').length;
+      if (m.bestOf === 1 && coins) return 'gelijkspel, munt beslist';
+      const parts = [];
+      if (!m.winner && m.a && m.b) parts.push(m.bestOf > 1 ? `bezig · game ${m.games.length + 1}` : 'bezig');
+      if (m.bestOf > 1 && coins) parts.push(`${coins}× munt bij gelijkspel`);
+      return parts.join(' · ');
+    };
+    const bo = r => tour.rounds[r][0].bestOf > 1 ? ` · best of ${tour.rounds[r][0].bestOf}` : '';
+    const cols = tour.rounds.map((rd, r) => `<div class="round"><h4>${escapeHtml(roundName(r) + bo(r))}</h4><div class="matches">${
+      rd.map(m => `<div class="match ${!m.winner && m.a && m.b ? 'live' : ''}">${slot(m, 'a')}${slot(m, 'b')}${tag(m) ? `<div class="tag">${tag(m)}</div>` : ''}</div>`).join('')
+    }</div></div>`).join('');
+    return `<div class="bracket-scroll"><div class="bracket">${cols}</div></div>`;
+  }
+
+  function renderTourRules() {
+    const reward = tour.reward ? `<p>Prijs voor de winnaar: <b>${escapeHtml(tour.reward)}</b></p>` : '';
+    return `<div class="tp-card"><h3>Speelwijze</h3>
+      <p>Knock-out: de winnaar gaat door, de verliezer ligt eruit. Halve finales zijn best of 3, de finale is best of 5. In een reeks wisselen de spelers per game wie met X begint. Gelijkspel in een game? Dan beslist een munt.</p>
+      ${reward}</div>`;
+  }
+
+  function renderTourMenu() {
+    tourBody.innerHTML = `<div class="tp-head"><h2>Toernooi</h2><div class="acts"><button type="button" data-act="close">Terug naar de kubus</button></div></div>
+      <p class="tp-note" id="tNote">${escapeHtml(tourNoteText)}</p>
+      <div class="tp-grid">
+        <section class="tp-card">
+          <h3>Toernooi organiseren</h3>
+          <p>Jij krijgt een code voor de spelers. Iedereen speelt op zijn eigen telefoon of computer; winnaars gaan door, verliezers liggen eruit.</p>
+          <label>Aantal spelers
+            <select id="tSize"><option value="8">8 spelers</option><option value="16">16 spelers</option></select></label>
+          <label class="chk"><input type="checkbox" id="tPlays" checked> Ik speel zelf mee</label>
+          <label>Jouw naam <input type="text" id="tOrgName" maxlength="20" autocomplete="nickname" placeholder="Bijv. Sam"></label>
+          <label>Prijs voor de winnaar (optioneel) <input type="text" id="tReward" maxlength="80" autocomplete="off" placeholder="Bijv. een zak drop"></label>
+          <button type="button" class="primary" data-act="create">Toernooi aanmaken</button>
+        </section>
+        <section class="tp-card">
+          <h3>Meedoen aan een toernooi</h3>
+          <p>Vul de code van de organisator in en kies de naam waaronder je speelt.</p>
+          <label>Toernooicode <input type="text" id="tCode" maxlength="6" autocomplete="off" spellcheck="false" placeholder="CODE"></label>
+          <label>Jouw naam <input type="text" id="tName" maxlength="20" autocomplete="nickname" placeholder="Bijv. Robin"></label>
+          <button type="button" class="primary" data-act="join">Meedoen</button>
+        </section>
+      </div>`;
+  }
+
+  tourBody.addEventListener('click', e => {
+    const el = e.target.closest('[data-act]');
+    if (!el || el.disabled) return;
+    const act = el.dataset.act;
+    if (act === 'close') closeTourPanel();
+    else if (act === 'create') createTour();
+    else if (act === 'join') joinTour();
+    else if (act === 'start') startTour();
+    else if (act === 'play') playMatch(el.dataset.id);
+    else if (act === 'copy') copyText(tourCode, el, 'Kopieer code');
+    else if (act === 'share') shareLink('t', tourCode, el, 'Deel link');
+    else if (act === 'leave') { leaveTour(); tourView = 'menu'; setTourNote(''); renderTour(); updateUI(); }
+  });
+  tourBody.addEventListener('keydown', e => {
+    if (e.key !== 'Enter' || e.target.tagName !== 'INPUT') return;
+    if (e.target.id === 'tCode' || e.target.id === 'tName') joinTour();
+    if (e.target.id === 'tOrgName' || e.target.id === 'tReward') createTour();
+  });
+  window.addEventListener('keydown', e => { if (e.key === 'Escape' && !tourPanel.hidden) closeTourPanel(); });
+
+  // ---------- Start: online when the shared store is available, otherwise one device ----------
+  function startLocal() {
+    mode = 'local';
+    document.getElementById('modeHelp').textContent = onlineSupported()
+      ? 'Speel samen op dit apparaat, of klik op "Online spel starten" en geef de code aan je tegenstander. Die opent dit bestand ook en vult de code in. Met "Toernooi" speel je met 8 of 16 spelers een knock-outtoernooi. Sleep om de kubus te bekijken.'
+      : 'Jullie spelen samen op dit apparaat. Sleep ergens om de kubus van alle kanten te bekijken.';
+    sync();
+  }
+
+  async function startOnline() {
+    const c = window.claude;
+    let dbNs = null, userNs = null;
+    try { [dbNs, userNs] = await Promise.all([c.use('db'), c.use('user')]); } catch (_) { /* fall through */ }
+    if (!dbNs) return startLocal();
+    db = dbNs; userApi = userNs;
+    if (userApi) {
+      myId = await userApi.id();
+      amOwner = await userApi.isOwner();
+      const w = await userApi.can('data.write');
+      if (w === false) canWrite = false;
+    }
+    mode = 'online';
+    document.getElementById('modeHelp').textContent = 'Online: deel deze pagina met je tegenstander. Ieder kiest een plaats (X of O) en speelt op zijn eigen apparaat. Sleep om de kubus te bekijken.';
+    if (!myId) showNote('Log in om mee te spelen. Je kijkt nu alleen mee.');
+    else if (!canWrite) showNote('Je kunt hier alleen meekijken. Vraag de eigenaar om je als Bewerker uit te nodigen om mee te spelen.');
+    gameRef = db.doc('games/current');
+    const subscribe = () => gameRef.onSnapshot(snap => {
+      gameExists = snap.exists;
+      game = normalize(snap.exists ? snap.data() : null);
+      sync();
+    }, err => {
+      if (err && err.code === 'unavailable') setTimeout(subscribe, 2000);
+      else showNote('De verbinding met het spel is verbroken. Laad de pagina opnieuw.');
+    });
+    subscribe();
+    sync();
+  }
+
+  updateUI();
+  if (window.claude && typeof window.claude.use === 'function') startOnline();
+  else { startLocal(); openFromLink(); }
+  window.addEventListener('hashchange', openFromLink);
+
+  // Exposed for debugging/testing.
+  window.cubeTacToe = {
+    get game() { return game; }, get mode() { return mode; }, get net() { return net; },
+    get tour() { return tour; }, get tourRole() { return tourRole; }, get tourPlayerId() { return tourPlayerId; },
+    relay, stickers, placeMark, changeMark, makeMove, newGame, findLines, faceGrids, playMatch, myActiveMatch,
+  };
+})();
+</script>
+</body>
+</html>
