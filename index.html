@@ -189,6 +189,9 @@
   .home-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 14px; }
   .home-card .row { display: flex; gap: 8px; }
   .home-card .row input { flex: 1; min-width: 0; font-family: ui-monospace, Consolas, monospace; letter-spacing: 3px; text-transform: uppercase; }
+  .level-pick { display: flex; gap: 6px; }
+  .level-pick button { flex: 1; min-width: 0; padding: 7px 4px; font-size: 13px; }
+  .level-pick button[aria-pressed="true"] { border-color: var(--gold); color: var(--gold); background: #2b2a22; font-weight: 700; }
   .home-card .or { color: var(--muted); font-size: 13px; text-align: center; }
   .home-actions { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
   .home-rules ol { margin: 0; padding-left: 20px; color: var(--muted); line-height: 1.55; display: flex; flex-direction: column; gap: 6px; }
@@ -359,6 +362,16 @@
         <p data-i18n="localDesc"></p>
         <button type="button" class="primary" id="hLocal" data-i18n="play"></button>
       </section>
+      <section class="tp-card home-card" id="hSoloCard">
+        <h3 data-i18n="soloTitle"></h3>
+        <p data-i18n="soloDesc"></p>
+        <div class="level-pick" id="hSoloLevels" role="group" data-i18n-aria="levelLabel">
+          <button type="button" data-level="beginner" data-i18n="lvl_beginner"></button>
+          <button type="button" data-level="intermediate" data-i18n="lvl_intermediate"></button>
+          <button type="button" data-level="master" data-i18n="lvl_master"></button>
+        </div>
+        <button type="button" class="primary" id="hSolo" data-i18n="playVsAi"></button>
+      </section>
       <section class="tp-card home-card" id="hOnlineCard">
         <h3 data-i18n="onlineTitle"></h3>
         <p data-i18n="onlineDesc"></p>
@@ -473,7 +486,7 @@
       faceWhat: 'de {f}-zijde', sliceM: 'de middelste laag tussen L en R', sliceE: 'de middelste laag tussen U en D', sliceS: 'de middelste laag tussen F en B',
       cw: 'met de klok mee', ccw: 'tegen de klok in', turnTitle: 'Draai {what} {dir}',
       movesHint: "Wijs een knop aan (of houd hem vast) om de laag te zien · M, E, S = middelste lagen, goud op de kubus · Shift + toets = tegen de klok in (')",
-      connecting: 'Verbinden…', wins: '{who} wint!', draw: 'Gelijkspel!', turning: '{who}: draaien…',
+      connecting: 'Verbinden…', wins: '{who} wint!', youWin: 'Jij wint ({p})!', draw: 'Gelijkspel!', turning: '{who}: draaien…',
       connectingServers: 'Verbinden met de spelservers…', waitOpponentJoin: 'Wachten tot je tegenstander meedoet…',
       otherPlacing: '{who} zet een teken…', otherTurning: '{who} draait aan de kubus…', waitSeat: 'Wachten tot iemand plaatsneemt als {p}',
       yourPlace: '{who}: zet je teken', yourMove: '{who}: draai aan de kubus, of verplaats je teken',
@@ -512,6 +525,12 @@
       through: 'Je bent door! Wachten op je volgende tegenstander…', watching: 'Je kijkt mee.',
       orgKeepOpen: 'Jij bent de organisator. Houd deze pagina open, dan worden alle uitslagen verwerkt.',
       byeRound: 'vrije ronde', unknownYet: 'nog onbekend', tagCoin: 'gelijkspel, munt beslist', tagLive: 'bezig',
+      soloTitle: 'Singleplayer-modus', soloDesc: 'Speel tegen de computer. Kies hoe sterk die speelt.', levelLabel: 'Niveau',
+      lvl_beginner: 'Beginner', lvl_intermediate: 'Gevorderd', lvl_master: 'Meester', lvl_mixed: 'Gemengd',
+      playVsAi: 'Spelen tegen de computer', computer: 'Computer', aiThinking: '{who} denkt na…',
+      modeHelpSolo: 'Jij speelt tegen de computer. Bij elk nieuw spel wisselt wie begint. Sleep om de kubus te bekijken; via "Menu" kies je een ander niveau.',
+      soloTour: 'Solo-toernooi', soloTourDesc: 'Speel in je eentje een knock-outtoernooi tegen 7 of 15 computertegenstanders.',
+      aiLevel: 'Niveau van de tegenstanders', startSoloTour: 'Start solo-toernooi',
       chat: 'Chat', spectatorChat: 'Chat van toeschouwers', chatPh: 'Typ een bericht…', chatClose: 'Chat sluiten', chatEmpty: 'Nog geen berichten.',
       chatPlayersReadOnly: 'Alleen toeschouwers kunnen hier typen. Succes met je wedstrijd!', chatTooFast: 'Je kunt één bericht per 5 seconden sturen. Nog {s} s.', spectator: 'Toeschouwer',
       watchBtn: 'Kijken', watchingBar: 'Je kijkt mee · {what} · {x} (X) tegen {o} (O)', matchWonBy: '{name} wint de wedstrijd.',
@@ -561,7 +580,7 @@
       faceWhat: 'the {f} face', sliceM: 'the middle layer between L and R', sliceE: 'the middle layer between U and D', sliceS: 'the middle layer between F and B',
       cw: 'clockwise', ccw: 'counter-clockwise', turnTitle: 'Turn {what} {dir}',
       movesHint: "Hover over (or hold) a button to see its layer · M, E, S = middle layers, gold on the cube · Shift + key = counter-clockwise (')",
-      connecting: 'Connecting…', wins: '{who} wins!', draw: "It's a draw!", turning: '{who}: turning…',
+      connecting: 'Connecting…', wins: '{who} wins!', youWin: 'You win ({p})!', draw: "It's a draw!", turning: '{who}: turning…',
       connectingServers: 'Connecting to the game servers…', waitOpponentJoin: 'Waiting for your opponent to join…',
       otherPlacing: '{who} is placing a mark…', otherTurning: '{who} is turning the cube…', waitSeat: 'Waiting for someone to take seat {p}',
       yourPlace: '{who}: place your mark', yourMove: '{who}: turn the cube, or move your mark',
@@ -600,6 +619,12 @@
       through: "You're through! Waiting for your next opponent…", watching: "You're watching.",
       orgKeepOpen: "You're the organizer. Keep this page open so all results get processed.",
       byeRound: 'bye', unknownYet: 'to be decided', tagCoin: 'draw, decided by coin', tagLive: 'in progress',
+      soloTitle: 'Singleplayer mode', soloDesc: 'Play against the computer. Choose how strong it plays.', levelLabel: 'Level',
+      lvl_beginner: 'Beginner', lvl_intermediate: 'Intermediate', lvl_master: 'Master', lvl_mixed: 'Mixed',
+      playVsAi: 'Play against the computer', computer: 'Computer', aiThinking: '{who} is thinking…',
+      modeHelpSolo: 'You are playing against the computer. Each new game, the other side starts. Drag to look around the cube; use "Menu" to pick another level.',
+      soloTour: 'Solo tournament', soloTourDesc: 'Play a knockout tournament on your own against 7 or 15 computer opponents.',
+      aiLevel: 'Opponent level', startSoloTour: 'Start solo tournament',
       chat: 'Chat', spectatorChat: 'Spectator chat', chatPh: 'Type a message…', chatClose: 'Close chat', chatEmpty: 'No messages yet.',
       chatPlayersReadOnly: 'Only spectators can type here. Good luck with your match!', chatTooFast: 'You can send one message every 5 seconds. {s} s to go.', spectator: 'Spectator',
       watchBtn: 'Watch', watchingBar: 'Watching · {what} · {x} (X) vs {o} (O)', matchWonBy: '{name} wins the match.',
@@ -649,7 +674,7 @@
       faceWhat: 'Die {f}-Seite', sliceM: 'Die mittlere Schicht zwischen L und R', sliceE: 'Die mittlere Schicht zwischen U und D', sliceS: 'Die mittlere Schicht zwischen F und B',
       cw: 'im Uhrzeigersinn', ccw: 'gegen den Uhrzeigersinn', turnTitle: '{what} {dir} drehen',
       movesHint: "Zeig auf eine Taste (oder halte sie), um die Schicht zu sehen · M, E, S = mittlere Schichten, golden am Würfel · Shift + Taste = gegen den Uhrzeigersinn (')",
-      connecting: 'Verbinden…', wins: '{who} gewinnt!', draw: 'Unentschieden!', turning: '{who}: dreht…',
+      connecting: 'Verbinden…', wins: '{who} gewinnt!', youWin: 'Du gewinnst ({p})!', draw: 'Unentschieden!', turning: '{who}: dreht…',
       connectingServers: 'Verbindung zu den Spielservern…', waitOpponentJoin: 'Warte, bis dein Gegner beitritt…',
       otherPlacing: '{who} setzt ein Zeichen…', otherTurning: '{who} dreht den Würfel…', waitSeat: 'Warte, bis jemand Platz {p} nimmt',
       yourPlace: '{who}: setze dein Zeichen', yourMove: '{who}: dreh den Würfel oder verschieb dein Zeichen',
@@ -688,6 +713,12 @@
       through: 'Du bist weiter! Warte auf deinen nächsten Gegner…', watching: 'Du schaust zu.',
       orgKeepOpen: 'Du bist der Organisator. Lass diese Seite offen, damit alle Ergebnisse verarbeitet werden.',
       byeRound: 'Freilos', unknownYet: 'noch offen', tagCoin: 'unentschieden, Münze entschied', tagLive: 'läuft',
+      soloTitle: 'Einzelspielermodus', soloDesc: 'Spiel gegen den Computer. Wähle, wie stark er spielt.', levelLabel: 'Stufe',
+      lvl_beginner: 'Anfänger', lvl_intermediate: 'Fortgeschritten', lvl_master: 'Meister', lvl_mixed: 'Gemischt',
+      playVsAi: 'Gegen den Computer spielen', computer: 'Computer', aiThinking: '{who} denkt nach…',
+      modeHelpSolo: 'Du spielst gegen den Computer. Bei jedem neuen Spiel beginnt die andere Seite. Zieh, um den Würfel anzusehen; über „Menü“ wählst du eine andere Stufe.',
+      soloTour: 'Solo-Turnier', soloTourDesc: 'Spiel allein ein K.-o.-Turnier gegen 7 oder 15 Computergegner.',
+      aiLevel: 'Stärke der Gegner', startSoloTour: 'Solo-Turnier starten',
       chat: 'Chat', spectatorChat: 'Zuschauer-Chat', chatPh: 'Nachricht schreiben…', chatClose: 'Chat schließen', chatEmpty: 'Noch keine Nachrichten.',
       chatPlayersReadOnly: 'Nur Zuschauer können hier schreiben. Viel Glück bei deinem Spiel!', chatTooFast: 'Du kannst alle 5 Sekunden eine Nachricht senden. Noch {s} s.', spectator: 'Zuschauer',
       watchBtn: 'Zuschauen', watchingBar: 'Du schaust zu · {what} · {x} (X) gegen {o} (O)', matchWonBy: '{name} gewinnt die Partie.',
@@ -999,6 +1030,128 @@
     return found;
   }
 
+  // ---------- Computer opponent: engine ----------
+  // The AI works on a light model of the cube: 54 slots (face × row × column, the grid faceGrids() uses).
+  // Each of the 18 moves is a fixed permutation of those slots, so every "place a mark + turn" option
+  // can be tried in microseconds without touching the 3D scene.
+  const SLOT_FACES = ['x+', 'x-', 'y+', 'y-', 'z+', 'z-'];
+  const IN_PLANE = { x: ['y', 'z'], y: ['x', 'z'], z: ['x', 'y'] };
+  const MOVE_LIST = [];
+  for (const f of ['U', 'D', 'L', 'R', 'F', 'B', 'M', 'E', 'S']) for (const p of [false, true]) MOVE_LIST.push({ f, p });
+
+  const SLOT_GEO = []; // slot -> { n: outward normal, p: cubie position }
+  SLOT_FACES.forEach((key, fi) => {
+    const axis = key[0], sign = key[1] === '+' ? 1 : -1, [a, b] = IN_PLANE[axis];
+    for (let r = 0; r < 3; r++) for (let c = 0; c < 3; c++) {
+      const n = { x: 0, y: 0, z: 0 }, p = { x: 0, y: 0, z: 0 };
+      n[axis] = sign; p[axis] = sign; p[a] = r - 1; p[b] = c - 1;
+      SLOT_GEO[fi * 9 + r * 3 + c] = { n, p };
+    }
+  });
+  function slotOf(n, p) {
+    const axis = Math.abs(n.x) ? 'x' : Math.abs(n.y) ? 'y' : 'z', [a, b] = IN_PLANE[axis];
+    return SLOT_FACES.indexOf(axis + (n[axis] > 0 ? '+' : '-')) * 9 + (p[a] + 1) * 3 + (p[b] + 1);
+  }
+  // Quarter turn of v about unit axis k (Rodrigues with cos = 0, sin = s): the same rotation as applyMoveInstant.
+  const quarterTurn = (v, k, s) => {
+    const d = k.x * v.x + k.y * v.y + k.z * v.z;
+    return {
+      x: Math.round(s * (k.y * v.z - k.z * v.y) + k.x * d),
+      y: Math.round(s * (k.z * v.x - k.x * v.z) + k.y * d),
+      z: Math.round(s * (k.x * v.y - k.y * v.x) + k.z * d),
+    };
+  };
+  const MOVE_PERMS = MOVE_LIST.map(({ f, p }) => {
+    const F = FACES[f], k = { x: F.n.x, y: F.n.y, z: F.n.z }, s = Math.sign(turnAngle(p));
+    const perm = new Int8Array(54);
+    for (let i = 0; i < 54; i++) {
+      const g = SLOT_GEO[i];
+      perm[i] = g.p[F.axis] === F.layer ? slotOf(quarterTurn(g.n, k, s), quarterTurn(g.p, k, s)) : i;
+    }
+    return perm;
+  });
+  const SLOT_LINES = [];
+  for (let fi = 0; fi < 6; fi++) for (const line of LINES) SLOT_LINES.push(line.map(([r, c]) => fi * 9 + r * 3 + c));
+
+  // Board: Int8Array(54), 0 = empty, 1 = X, 2 = O.
+  const permute = (b, perm) => { const o = new Int8Array(54); for (let i = 0; i < 54; i++) o[perm[i]] = b[i]; return o; };
+  function lineCount(b, who) {
+    let n = 0;
+    for (const L of SLOT_LINES) if (b[L[0]] === who && b[L[1]] === who && b[L[2]] === who) n++;
+    return n;
+  }
+  // How many of the 18 moves would let `who` complete a line on their next turn (one mark, then that move).
+  function winningMoves(b, who) {
+    let n = 0;
+    for (const perm of MOVE_PERMS) {
+      const pb = permute(b, perm);
+      for (const L of SLOT_LINES) {
+        let mine = 0, empty = 0;
+        for (const x of L) { if (pb[x] === who) mine++; else if (!pb[x]) empty++; }
+        if (mine === 3 || (mine === 2 && empty === 1)) { n++; break; }
+      }
+    }
+    return n;
+  }
+  function evaluate(b, me) {
+    const op = 3 - me;
+    let score = 0;
+    for (const L of SLOT_LINES) {
+      let m = 0, o = 0;
+      for (const x of L) { if (b[x] === me) m++; else if (b[x] === op) o++; }
+      if (!o) score += m === 2 ? 4 : m;
+      if (!m) score -= o === 2 ? 5 : o;
+    }
+    return score;
+  }
+
+  // Picks { s: slot, mi: index in MOVE_LIST } for player `me` (1 or 2) at level beginner / intermediate / master.
+  function aiChoose(board, me, level) {
+    const op = 3 - me, cands = [];
+    for (let s = 0; s < 54; s++) {
+      if (board[s]) continue;
+      const placed = board.slice();
+      placed[s] = me;
+      for (let mi = 0; mi < MOVE_PERMS.length; mi++) {
+        const b = permute(placed, MOVE_PERMS[mi]);
+        const win = lineCount(b, me) > 0;               // the mover wins with a line, even if the other has one too
+        cands.push({ s, mi, b, win, lose: !win && lineCount(b, op) > 0 });
+      }
+    }
+    if (!cands.length) return null;
+    const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+    const wins = cands.filter(c => c.win), safe = cands.filter(c => !c.lose);
+    if (level === 'beginner') {
+      if (wins.length && Math.random() < 0.35) return pick(wins);
+      return pick(safe.length && Math.random() < 0.6 ? safe : cands);
+    }
+    // Master always takes a win; intermediate overlooks one now and then.
+    if (wins.length && (level === 'master' || Math.random() < 0.8)) return pick(wins);
+    const pool = (safe.length ? safe : cands).filter(c => level === 'master' || !c.win || safe.length === wins.length);
+    const careful = level === 'master' || Math.random() < 0.5;
+    let best = null, bestScore = -Infinity;
+    for (const c of pool) {
+      let score = evaluate(c.b, me);
+      if (level === 'master') score += -60 * winningMoves(c.b, op) + 6 * Math.min(winningMoves(c.b, me), 3) + Math.random() * 0.5;
+      else score += (careful && winningMoves(c.b, op) ? -40 : 0) + Math.random() * 3;
+      if (score > bestScore) { bestScore = score; best = c; }
+    }
+    return best;
+  }
+
+  // The real cube as a slot board, plus which sticker sits in each slot.
+  function slotBoard() {
+    const grids = faceGrids(), marks = new Int8Array(54), stickerAt = new Array(54);
+    SLOT_FACES.forEach((key, fi) => {
+      for (let r = 0; r < 3; r++) for (let c = 0; c < 3; c++) {
+        const s = grids[key][r][c], i = fi * 9 + r * 3 + c;
+        stickerAt[i] = s.userData.index;
+        marks[i] = s.userData.mark === 'X' ? 1 : s.userData.mark === 'O' ? 2 : 0;
+      }
+    });
+    return { marks, stickerAt };
+  }
+
   // ---------- Shared game document ----------
   // The whole game is one document. The cube's position is the list of moves since a solved cube,
   // so every device replays it identically. The winner is derived, never stored.
@@ -1055,7 +1208,9 @@
     applyMarks();
     computeOutcome();
     if (outcome && mode === 'p2p' && net && net.kind === 'match') reportMatchResult(net.matchId, net.gameNo, outcome.winner);
+    if (outcome && mode === 'solo' && soloCtx.matchId) reportMatchResult(soloCtx.matchId, soloCtx.gameNo, outcome.winner);
     updateUI();
+    maybeAiTurn();
   }
 
   function applyMarks() {
@@ -1096,6 +1251,7 @@
 
   function isMyTurn() {
     if (mode === 'local') return true;
+    if (mode === 'solo') return game.current === soloCtx.humanSide;
     if (mode === 'p2p') return netReady() && game.current === net.side;
     if (mode !== 'online' || !myId || !canWrite) return false;
     return game.seats[game.current] === myId;
@@ -1107,6 +1263,10 @@
 
   let names = {}; // id -> display name, refreshed on each render
   function seatLabel(p) {
+    if (mode === 'solo') {
+      if (p === soloCtx.humanSide) return `${t('you')} (${p})`;
+      return `${soloCtx.oppId ? playerName(soloCtx.oppId) : `${t('computer')} (${t('lvl_' + soloCtx.level)})`} (${p})`;
+    }
     if (mode === 'p2p') {
       if (net.kind === 'watch') return `${p === 'X' ? net.xName : net.oName} (${p})`;
       if (p === net.side) return `${t('you')} (${p})`;
@@ -1180,6 +1340,13 @@
     hint.textContent = t('movesHint');
   }
 
+  // 'You win!' when this device's player won (also correct grammar in English and German).
+  function winText(p) {
+    const mine = (mode === 'solo' && p === soloCtx.humanSide) || (mode === 'p2p' && net && net.kind !== 'watch' && p === net.side) ||
+      (mode === 'online' && myId && game.seats[p] === myId);
+    return mine ? t('youWin', { p }) : t('wins', { who: seatLabel(p) });
+  }
+
   function setStatus(html, cls) { statusEl.innerHTML = html; statusEl.className = cls || ''; }
 
   function updateUI() {
@@ -1188,12 +1355,13 @@
 
     if (mode === 'connecting') setStatus(t('connecting'));
     else if (outcome) {
-      const msg = outcome.winner ? t('wins', { who: seatLabel(outcome.winner) }) : t('draw');
+      const msg = outcome.winner ? winText(outcome.winner) : t('draw');
       setStatus(outcome.winner ? `<b class="${outcome.winner}">${escapeHtml(msg)}</b>` : escapeHtml(msg), outcome.winner || '');
     } else if (anim) setStatus(t('turning', { who }), p);
     else if (mode === 'p2p' && !relay.connectedCount()) setStatus(t('connectingServers'));
     else if (mode === 'p2p' && !netReady()) setStatus(net.hosting ? t('waitOpponentJoin') : t('connecting'));
     else if (mode === 'p2p' && !isMyTurn()) setStatus(t(game.phase === 'place' ? 'otherPlacing' : 'otherTurning', { who }), p);
+    else if (mode === 'solo' && !isMyTurn()) setStatus(t(game.phase === 'place' ? 'aiThinking' : 'otherTurning', { who }), p);
     else if (mode === 'online' && !game.seats[p]) setStatus(t('waitSeat', { p: `<b class="${p}">${p}</b>` }), p);
     else if (mode === 'online' && !isMyTurn()) {
       setStatus(t(game.phase === 'place' ? 'otherPlacing' : 'otherTurning', { who }), p);
@@ -1208,13 +1376,13 @@
 
     // Banner: shown only once the game is over (after the final turn has animated).
     if (outcome && !anim) {
-      bannerText.textContent = outcome.winner ? t('wins', { who: seatLabel(outcome.winner) }) : t('draw');
+      bannerText.textContent = outcome.winner ? winText(outcome.winner) : t('draw');
       bannerText.style.color = outcome.winner === 'X' ? 'var(--x)' : outcome.winner === 'O' ? 'var(--o)' : 'var(--text)';
       banner.hidden = false;
     } else banner.hidden = true;
 
-    const inMatch = mode === 'p2p' && net && (net.kind === 'match' || net.kind === 'watch');
-    const mayReset = mode === 'local' || (mode === 'p2p' && net && net.kind === 'code' && netReady()) || (mode === 'online' && canWrite && (isSeated() || amOwner));
+    const inMatch = (mode === 'p2p' && net && (net.kind === 'match' || net.kind === 'watch')) || (mode === 'solo' && !!soloCtx.matchId);
+    const mayReset = mode === 'local' || (mode === 'solo' && !soloCtx.matchId) || (mode === 'p2p' && net && net.kind === 'code' && netReady()) || (mode === 'online' && canWrite && (isSeated() || amOwner));
     newGameBtn.disabled = !mayReset;
     const bannerBtn = document.getElementById('bannerNew');
     bannerBtn.textContent = inMatch ? t(nextGameReady() ? 'nextGame' : 'toBracket') : t('playAgain');
@@ -1283,7 +1451,7 @@
 
   // ---------- Actions ----------
   async function commit(patch) {
-    if (mode === 'local' || mode === 'p2p') {
+    if (mode === 'local' || mode === 'p2p' || mode === 'solo') {
       game = normalize({ ...game, ...patch, ver: game.ver + 1 });
       sync();
       if (mode === 'p2p') publishGame();
@@ -1348,12 +1516,19 @@
   }
 
   function newGame() {
+    // Against the computer, the start alternates: X (who begins) has the advantage in this game.
+    if (mode === 'solo' && !soloCtx.matchId) {
+      stopAi();
+      soloCtx.humanSide = other(soloCtx.humanSide);
+      soloCtx.aiSide = other(soloCtx.aiSide);
+    }
     commit({ round: game.round + 1, marks: EMPTY_MARKS, moves: [], current: 'X', phase: 'place', last: -1 });
   }
   newGameBtn.addEventListener('click', newGame);
   document.getElementById('bannerNew').addEventListener('click', () => {
     if (mode === 'p2p' && net && net.kind === 'match' && nextGameReady()) playMatch(net.matchId);
-    else if (mode === 'p2p' && net && (net.kind === 'match' || net.kind === 'watch')) openTourPanel();
+    else if (mode === 'solo' && soloCtx.matchId && nextGameReady()) playSoloMatch(soloCtx.matchId);
+    else if ((mode === 'p2p' && net && (net.kind === 'match' || net.kind === 'watch')) || (mode === 'solo' && soloCtx.matchId)) openTourPanel();
     else newGame();
   });
 
@@ -1785,7 +1960,12 @@
   const tourBtn = document.getElementById('tourBtn');
 
   const cleanName = s => String(s || '').replace(/\s+/g, ' ').trim().slice(0, 20);
-  const playerName = id => { const p = tour && tour.players.find(x => x.id === id); return p ? p.name : '?'; };
+  // Computer players (solo tournament) show their level, in the viewer's language.
+  const playerName = id => {
+    const p = tour && tour.players.find(x => x.id === id);
+    if (!p) return '?';
+    return p.ai ? `${p.name} (${t('lvl_' + p.ai)})` : p.name;
+  };
   const roundName = r => t('rounds')[tour.rounds.length - 1 - r] || t('roundN', { n: r + 1 });
   const tourTopic = sub => 'tour/' + tourCode + '/' + sub;
   const saveTourRole = () => store.set('kke-tour-' + tourCode, { role: tourRole, playerId: tourPlayerId, name: tourName });
@@ -1828,7 +2008,8 @@
   function closeTourPanel() {
     tourPanel.hidden = true;
     // Back to the game while a tournament match is open, otherwise back to the menu.
-    if (!(mode === 'p2p' && net && (net.kind === 'match' || net.kind === 'watch')) && homeSupported()) showHome();
+    const inTourGame = (mode === 'p2p' && net && (net.kind === 'match' || net.kind === 'watch')) || (mode === 'solo' && soloCtx.matchId);
+    if (!inTourGame && homeSupported()) showHome();
   }
 
   function subscribeTour() {
@@ -1849,11 +2030,13 @@
     clearInterval(tourTimer);
     tourTimer = null;
     if (mode === 'p2p' && net && (net.kind === 'match' || net.kind === 'watch')) stopNet(true);
+    if (mode === 'solo' && soloCtx.matchId) { stopAi(); soloCtx.matchId = null; soloCtx.oppId = null; mode = 'local'; }
     tour = null; tourCode = null; tourRole = null; tourPlayerId = null; tourName = ''; pendingResults = {};
   }
 
   // --- organizer ---
-  function publishTour() { relay.publish(tourTopic('state'), { t: 'tour', tour }, true); }
+  // A solo tournament lives only on this device: nothing is published.
+  function publishTour() { if (!tour || tour.solo) return; relay.publish(tourTopic('state'), { t: 'tour', tour }, true); }
   function bumpTour() { tour.ver++; publishTour(); afterTourChange(); }
 
   function createTour() {
@@ -1900,7 +2083,7 @@
   const winsNeeded = m => Math.ceil((m.bestOf || 1) / 2);
 
   function onResult(p) {
-    if (tourRole !== 'org' || !tour || tour.phase !== 'running') return;
+    if ((tourRole !== 'org' && tourRole !== 'solo') || !tour || tour.phase !== 'running') return;
     const loc = findMatch(p.matchId);
     if (!loc) return;
     const m = loc.m;
@@ -1930,7 +2113,7 @@
   }
 
   function startTour() {
-    if (tourRole !== 'org' || !tour || tour.phase !== 'lobby' || tour.players.length < 2) return;
+    if ((tourRole !== 'org' && tourRole !== 'solo') || !tour || tour.phase !== 'lobby' || tour.players.length < 2) return;
     const ids = tour.players.map(p => p.id);
     for (let i = ids.length - 1; i > 0; i--) { const j = randomInt(i + 1); [ids[i], ids[j]] = [ids[j], ids[i]]; }
     // Smallest bracket that fits everyone; empty spots become byes (that player goes straight through).
@@ -1998,7 +2181,7 @@
     for (const [key, r] of Object.entries(pendingResults)) {
       const loc = findMatch(r.matchId);
       if (!loc || loc.m.winner || loc.m.games.length > r.game) { delete pendingResults[key]; continue; }
-      if (tourRole === 'org') onResult(r);
+      if (tourRole === 'org' || tourRole === 'solo') onResult(r);
       else relay.publish(tourTopic('result'), { t: 'result', ...r });
     }
   }
@@ -2014,6 +2197,10 @@
 
   // The series this device is playing goes on, and the organizer has counted the game just played.
   function nextGameReady() {
+    if (mode === 'solo' && soloCtx.matchId) {
+      const loc = findMatch(soloCtx.matchId);
+      return !!loc && !loc.m.winner && loc.m.games.length > soloCtx.gameNo;
+    }
     if (!(mode === 'p2p' && net && net.kind === 'match')) return false;
     const loc = findMatch(net.matchId);
     return !!loc && !loc.m.winner && loc.m.games.length > net.gameNo;
@@ -2021,7 +2208,7 @@
 
   // Spectating: anyone without a match to play right now can follow a live match, read-only.
   // A spectator only listens to the match channel and never sends anything to it.
-  const canSpectate = m => !!(tour && tour.phase === 'running' && m.a && m.b && !m.winner &&
+  const canSpectate = m => !!(tour && !tour.solo && tour.phase === 'running' && m.a && m.b && !m.winner &&
     m.a !== tourPlayerId && m.b !== tourPlayerId && !myActiveMatch());
 
   async function watchMatch(id) {
@@ -2177,7 +2364,14 @@
 
   function afterTourChange() {
     if (tour && tourRole === 'player' && tour.players.some(p => p.id === tourPlayerId)) saveTourRole();
+    resolveAiMatches(); // solo tournament: settle computer-vs-computer matches right away
     tourTick();
+    // Solo tournament: a coin decided a drawn game against the computer.
+    if (mode === 'solo' && soloCtx.matchId) {
+      const loc = findMatch(soloCtx.matchId);
+      const g = loc && loc.m.games[soloCtx.gameNo];
+      if (g && g.how === 'coin') showNote(t('coinGame', { name: playerName(loc.m[g.winner]) }));
+    }
     // A drawn game was settled by a coin: tell the two players (and spectators) who it picked.
     if (mode === 'p2p' && net && (net.kind === 'match' || net.kind === 'watch')) {
       const loc = findMatch(net.matchId);
@@ -2199,7 +2393,9 @@
   function renderTourButton() {
     tourBtn.hidden = !onlineSupported() || mode === 'online' || mode === 'connecting';
     const active = myActiveMatch();
-    const ready = !!active && !(mode === 'p2p' && net && net.kind === 'match' && net.matchId === active.m.id && net.gameNo === active.m.games.length);
+    const inIt = (mode === 'p2p' && net && net.kind === 'match' && net.matchId === active?.m.id && net.gameNo === active?.m.games.length) ||
+      (mode === 'solo' && soloCtx.matchId === active?.m.id && soloCtx.gameNo === active?.m.games.length);
+    const ready = !!active && !inIt;
     tourBtn.classList.toggle('ready', ready);
     tourBtn.textContent = t(ready ? 'yourMatch' : 'tour');
   }
@@ -2210,9 +2406,12 @@
     if (tourPanel.hidden) return;
     if (tourView === 'menu') { renderTourMenu(); return; }
     const me = tourPlayerId;
-    const share = canShareLinks() ? `<button type="button" data-act="share">${t('shareLinkBtn')}</button>` : '';
-    let html = `<div class="tp-head"><h2>${t('tour')} <code>${escapeHtml(tourCode || '')}</code></h2>
-      <div class="acts"><button type="button" data-act="copy">${t('copyCode')}</button>${share}<button type="button" data-act="close">${t('back')}</button></div></div>
+    const solo = !!(tour && tour.solo);
+    const share = !solo && canShareLinks() ? `<button type="button" data-act="share">${t('shareLinkBtn')}</button>` : '';
+    const copy = solo ? '' : `<button type="button" data-act="copy">${t('copyCode')}</button>`;
+    const title = solo ? t('soloTour') : `${t('tour')} <code>${escapeHtml(tourCode || '')}</code>`;
+    let html = `<div class="tp-head"><h2>${title}</h2>
+      <div class="acts">${copy}${share}<button type="button" data-act="close">${t('back')}</button></div></div>
       <p class="tp-note" id="tNote">${escapeHtml(tourNoteText)}</p>`;
     if (!tour) {
       html += `<div class="tp-card"><p>${t('connectingTour')}</p></div>`;
@@ -2305,7 +2504,8 @@
   function renderTourMenu() {
     // Keep what was typed when the language changes while this form is open.
     const keep = {};
-    for (const id of ['tSize', 'tOrgName', 'tReward', 'tCode', 'tName']) { const el = document.getElementById(id); if (el) keep[id] = el.value; }
+    for (const id of ['tSize', 'tOrgName', 'tReward', 'tCode', 'tName', 'tSoloName', 'tSoloSize', 'tSoloLevel']) { const el = document.getElementById(id); if (el) keep[id] = el.value; }
+    if (!keep.tSoloLevel) keep.tSoloLevel = store.get('kke-ai-level') || 'intermediate';
     const plays = document.getElementById('tPlays');
     tourBody.innerHTML = `<div class="tp-head"><h2>${t('tour')}</h2><div class="acts"><button type="button" data-act="close">${t('back')}</button></div></div>
       <p class="tp-note" id="tNote">${escapeHtml(tourNoteText)}</p>
@@ -2327,6 +2527,16 @@
           <label>${t('yourName')} <input type="text" id="tName" maxlength="20" autocomplete="nickname" placeholder="${escapeHtml(t('namePh2'))}"></label>
           <button type="button" class="primary" data-act="join">${t('join')}</button>
         </section>
+        <section class="tp-card">
+          <h3>${t('soloTour')}</h3>
+          <p>${t('soloTourDesc')}</p>
+          <label>${t('numPlayers')}
+            <select id="tSoloSize"><option value="8">${t('nPlayers', { n: 8 })}</option><option value="16">${t('nPlayers', { n: 16 })}</option></select></label>
+          <label>${t('aiLevel')}
+            <select id="tSoloLevel">${['beginner', 'intermediate', 'master', 'mixed'].map(l => `<option value="${l}">${t('lvl_' + l)}</option>`).join('')}</select></label>
+          <label>${t('yourName')} <input type="text" id="tSoloName" maxlength="20" autocomplete="nickname" placeholder="${escapeHtml(t('namePh1'))}"></label>
+          <button type="button" class="primary" data-act="createSolo">${t('startSoloTour')}</button>
+        </section>
       </div>`;
     for (const [id, v] of Object.entries(keep)) document.getElementById(id).value = v;
     if (plays) document.getElementById('tPlays').checked = plays.checked;
@@ -2340,7 +2550,8 @@
     else if (act === 'create') createTour();
     else if (act === 'join') joinTour();
     else if (act === 'start') startTour();
-    else if (act === 'play') playMatch(el.dataset.id);
+    else if (act === 'play') (tour && tour.solo ? playSoloMatch : playMatch)(el.dataset.id);
+    else if (act === 'createSolo') createSoloTour();
     else if (act === 'watch') watchMatch(el.dataset.id);
     else if (act === 'copy') copyText(tourCode, el, t('copyCode'));
     else if (act === 'share') shareLink('t', tourCode, el, t('shareLinkBtn'));
@@ -2350,8 +2561,124 @@
     if (e.key !== 'Enter' || e.target.tagName !== 'INPUT') return;
     if (e.target.id === 'tCode' || e.target.id === 'tName') joinTour();
     if (e.target.id === 'tOrgName' || e.target.id === 'tReward') createTour();
+    if (e.target.id === 'tSoloName') createSoloTour();
   });
   window.addEventListener('keydown', e => { if (e.key === 'Escape' && !tourPanel.hidden) closeTourPanel(); });
+
+  // ---------- Singleplayer: playing against the computer ----------
+  const AI_LEVELS = ['beginner', 'intermediate', 'master'];
+  // matchId/gameNo/oppId are set while playing a match of a solo tournament.
+  const soloCtx = { level: 'intermediate', humanSide: 'X', aiSide: 'O', matchId: null, gameNo: 0, oppId: null };
+  let aiTimer = null;
+  function stopAi() { clearTimeout(aiTimer); aiTimer = null; }
+
+  // The computer's turn: think briefly, place its mark, then turn the cube (two steps, like a person).
+  function maybeAiTurn() {
+    if (mode !== 'solo' || anim || outcome || aiTimer) return;
+    if (game.current !== soloCtx.aiSide || game.phase !== 'place') return;
+    const stillItsTurn = phase => mode === 'solo' && !anim && !outcome && game.current === soloCtx.aiSide && game.phase === phase;
+    aiTimer = setTimeout(() => {
+      aiTimer = null;
+      if (!stillItsTurn('place')) return;
+      const { marks, stickerAt } = slotBoard();
+      const choice = aiChoose(marks, soloCtx.aiSide === 'X' ? 1 : 2, soloCtx.level);
+      if (!choice) return;
+      const i = stickerAt[choice.s], move = MOVE_LIST[choice.mi];
+      commit({ marks: game.marks.slice(0, i) + soloCtx.aiSide + game.marks.slice(i + 1), phase: 'move', last: i });
+      aiTimer = setTimeout(() => {
+        aiTimer = null;
+        if (!stillItsTurn('move')) return;
+        commit({ moves: [...game.moves, { f: move.f, p: move.p, by: soloCtx.aiSide }], current: other(soloCtx.aiSide), phase: 'place' });
+      }, 650);
+    }, 600);
+  }
+
+  function enterSolo() {
+    stopAi();
+    if (mode === 'p2p') leaveNet();
+    leaveChat();
+    mode = 'solo';
+    modeHelpKey = 'modeHelpSolo';
+    showNote('');
+  }
+
+  // Free play: you are X and start; the computer plays O at the chosen level.
+  function startSolo(level) {
+    enterSolo();
+    Object.assign(soloCtx, { level, humanSide: 'X', aiSide: 'O', matchId: null, gameNo: 0, oppId: null });
+    store.set('kke-ai-level', level);
+    game = normalize({ round: game.round + 1, ver: game.ver + 1 });
+    hideHome();
+    applyLang();
+    sync();
+  }
+
+  // A match of the solo tournament: the computer opponent plays at its own level; X alternates per game.
+  function playSoloMatch(id) {
+    const loc = findMatch(id);
+    if (!loc || loc.m.winner) return;
+    const m = loc.m, gameNo = m.games.length;
+    const mine = m.a === tourPlayerId ? 'a' : 'b', theirs = mine === 'a' ? 'b' : 'a';
+    const humanSide = xSlotOf(gameNo) === mine ? 'X' : 'O';
+    const bot = tour.players.find(p => p.id === m[theirs]);
+    enterSolo();
+    Object.assign(soloCtx, { level: (bot && bot.ai) || 'intermediate', humanSide, aiSide: other(humanSide), matchId: m.id, gameNo, oppId: m[theirs] });
+    game = normalize({ round: game.round + 1, ver: game.ver + 1 });
+    closeTourPanel();
+    hideHome();
+    applyLang();
+    sync();
+  }
+
+  const BOT_NAMES = ['Ada', 'Bram', 'Cleo', 'Daan', 'Eva', 'Finn', 'Gijs', 'Hanna', 'Ivo', 'Jade', 'Kees', 'Lotte', 'Milan', 'Otto', 'Pien'];
+
+  function createSoloTour() {
+    const name = cleanName(document.getElementById('tSoloName').value);
+    if (!name) { setTourNote(t('enterName')); return; }
+    const size = document.getElementById('tSoloSize').value === '16' ? 16 : 8;
+    const level = document.getElementById('tSoloLevel').value;
+    leaveTour();
+    tourCode = 'SOLO';
+    tourRole = 'solo';
+    tourPlayerId = 'me';
+    tourName = name;
+    const names = BOT_NAMES.slice();
+    for (let i = names.length - 1; i > 0; i--) { const j = randomInt(i + 1); [names[i], names[j]] = [names[j], names[i]]; }
+    const bots = names.slice(0, size - 1).map((n, i) => ({
+      id: 'bot' + i, name: n, ai: AI_LEVELS.includes(level) ? level : AI_LEVELS[randomInt(3)],
+    }));
+    tour = { code: 'SOLO', solo: true, size, reward: null, phase: 'lobby', players: [{ id: 'me', name }, ...bots], rounds: [], champion: null, ver: 1 };
+    tourView = 'tour';
+    setTourNote('');
+    startTour(); // builds the bracket; computer-vs-computer matches are then decided in afterTourChange
+  }
+
+  // Computer-vs-computer matches are decided at once, weighted by level (stronger usually wins, not always).
+  function resolveAiMatches() {
+    if (!tour || !tour.solo || tour.phase !== 'running') return false;
+    const rank = id => AI_LEVELS.indexOf((tour.players.find(p => p.id === id) || {}).ai);
+    const winChance = [0.5, 0.72, 0.88]; // by level difference
+    let changed = false, again = true;
+    while (again && tour.phase === 'running') {
+      again = false;
+      tour.rounds.forEach((rd, r) => rd.forEach((m, i) => {
+        if (m.winner || !m.a || !m.b || m.a === tourPlayerId || m.b === tourPlayerId) return;
+        const diff = rank(m.a) - rank(m.b);
+        const pA = diff >= 0 ? winChance[diff] : 1 - winChance[-diff];
+        while (!m.winner) {
+          const draw = Math.random() < 0.08;
+          const slot = (draw ? Math.random() < 0.5 : Math.random() < pA) ? 'a' : 'b';
+          m.games.push({ winner: slot, how: draw ? 'coin' : 'win' });
+          m.wins[slot]++;
+          if (m.wins[slot] >= winsNeeded(m)) { m.winner = m[slot]; m.how = m.bestOf > 1 ? 'series' : (draw ? 'coin' : 'win'); }
+        }
+        advance(r, i);
+        changed = again = true;
+      }));
+    }
+    if (changed) tour.ver++;
+    return changed;
+  }
 
   // ---------- Home screen ----------
   // The menu shown at start: play on one device, 1-on-1 online, tournament, rules, report a bug.
@@ -2384,10 +2711,28 @@
     if (el) showHome(el.dataset.home);
   });
   document.getElementById('hLocal').addEventListener('click', () => {
-    if (mode === 'p2p') { leaveNet(); mode = 'local'; }
+    if (mode === 'p2p') { leaveChat(); leaveNet(); mode = 'local'; }
+    if (mode === 'solo') { stopAi(); soloCtx.matchId = null; soloCtx.oppId = null; mode = 'local'; }
+    modeHelpKey = 'modeHelpMenu';
+    applyLang();
     showNote('');
     hideHome();
     newGame();
+  });
+  // Singleplayer tile: pick a level (remembered on this device), then play.
+  const levelPick = document.getElementById('hSoloLevels');
+  const renderLevelPick = () => {
+    const chosen = store.get('kke-ai-level') || 'intermediate';
+    for (const b of levelPick.querySelectorAll('[data-level]')) b.setAttribute('aria-pressed', String(b.dataset.level === chosen));
+  };
+  levelPick.addEventListener('click', e => {
+    const b = e.target.closest('[data-level]');
+    if (b) { store.set('kke-ai-level', b.dataset.level); renderLevelPick(); }
+  });
+  renderLevelPick();
+  document.getElementById('hSolo').addEventListener('click', () => {
+    const level = store.get('kke-ai-level');
+    startSolo(AI_LEVELS.includes(level) ? level : 'intermediate');
   });
   document.getElementById('hHost').addEventListener('click', () => { hideHome(); hostGame(); });
   const homeJoin = () => {
@@ -2472,7 +2817,7 @@
   // Reports go to a private-ish ntfy.sh mailbox. A scheduled Claude task on the owner's computer reads them,
   // separates real bugs from noise, and prepares fixes that the owner approves before they go live.
   const BUG_TOPIC = 'kke-bugs-q7Vt2mZx9KpR4wLs8NcY';
-  const APP_VERSION = '20261008170903'; // filled in by build.ps1
+  const APP_VERSION = '20261008200033'; // filled in by build.ps1
   const BUG_WAIT_MS = 2 * 60 * 1000;
 
   function setBugMessages(error, ok) {
@@ -2596,6 +2941,7 @@
     get game() { return game; }, get mode() { return mode; }, get net() { return net; },
     get tour() { return tour; }, get tourRole() { return tourRole; }, get tourPlayerId() { return tourPlayerId; },
     relay, stickers, placeMark, changeMark, makeMove, newGame, findLines, faceGrids, playMatch, myActiveMatch,
+    ai: { slotBoard, aiChoose, permute, lineCount, winningMoves, MOVE_PERMS, MOVE_LIST, soloCtx, startSolo, playSoloMatch },
   };
 })();
 </script>

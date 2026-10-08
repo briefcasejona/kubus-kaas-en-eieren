@@ -1,7 +1,7 @@
 // Service worker: lets the installed app start without a connection and load fast.
 // The page itself is fetched network-first, so a new version reaches players on their next start.
-// 20261008170903 is filled in by build.ps1 on every build.
-const CACHE = 'kubus-kaas-en-eieren-20261008170903';
+// 20261008200033 is filled in by build.ps1 on every build.
+const CACHE = 'kubus-kaas-en-eieren-20261008200033';
 const LIBS = [
   'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js',
   'https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js',
