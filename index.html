@@ -454,7 +454,7 @@
       shareTitle: 'App delen', shareDesc: 'Stuur de app naar een vriend, of laat een vriend naast je de QR-code scannen.',
       shareApp: 'Deel de app', showQr: 'Toon QR-code',
       rulesTitle: 'Spelregels', rulesDesc: 'Hoe zet je een teken, hoe draai je de kubus en wanneer win je?', viewRules: 'Bekijk de regels',
-      bugTitle: 'Bug melden', bugDesc: 'Werkt er iets niet zoals het hoort? Laat het weten; Claude bekijkt elke melding.',
+      bugTitle: 'Bug melden', bugDesc: 'Werkt er iets niet zoals het hoort? Laat het weten; wij bekijken elke melding.',
       rulesHtml: '<li>Speler 1 speelt met <b>X</b>, speler 2 met <b>O</b>. Je mag op elk leeg vakje van de kubus je teken zetten, ook op de middelste.</li><li>Daarna draai je precies één keer aan de kubus: een buitenzijde (<b>U D L R F B</b>) of een middelste laag (<b>M E S</b>). Met Shift of de knoppen met \' draai je tegen de klok in.</li><li>Bedacht? Zolang je nog niet gedraaid hebt, klik je een ander leeg vakje om je teken te verplaatsen, of je teken zelf om het terug te nemen.</li><li>Drie op een rij op één zijde wint. Dat wordt pas gecontroleerd als de draai klaar is. Hebben beide spelers een rij? Dan wint wie net gedraaid heeft.</li><li>Alle 54 vakjes vol zonder rij is gelijkspel. In een toernooi beslist dan een munt.</li><li>Sleep over het scherm om de kubus van alle kanten te bekijken.</li>',
       back: 'Terug',
       shareIntro: 'Laat je vriend deze code scannen met de camera van de telefoon. Daarna kan de app geïnstalleerd worden via "App installeren" of "Zet op beginscherm".',
@@ -542,7 +542,7 @@
       shareTitle: 'Share the app', shareDesc: 'Send the app to a friend, or let a friend next to you scan the QR code.',
       shareApp: 'Share the app', showQr: 'Show QR code',
       rulesTitle: 'Rules', rulesDesc: 'How do you place a mark, turn the cube, and win?', viewRules: 'Read the rules',
-      bugTitle: 'Report a bug', bugDesc: "Something not working as it should? Let us know; Claude reviews every report.",
+      bugTitle: 'Report a bug', bugDesc: "Something not working as it should? Let us know; we review every report.",
       rulesHtml: '<li>Player 1 plays <b>X</b>, player 2 plays <b>O</b>. You may place your mark on any empty square of the cube, including the centres.</li><li>Then you turn the cube exactly once: an outer face (<b>U D L R F B</b>) or a middle layer (<b>M E S</b>). Hold Shift, or use the buttons with \', to turn counter-clockwise.</li><li>Changed your mind? Until you turn the cube, click another empty square to move your mark, or click the mark itself to take it back.</li><li>Three in a row on one face wins. This is only checked once the turn is finished. Both players have a row? Then the player who just turned wins.</li><li>All 54 squares filled without a row is a draw. In a tournament a coin flip decides.</li><li>Drag across the screen to look at the cube from all sides.</li>',
       back: 'Back',
       shareIntro: 'Let your friend scan this code with their phone camera. Then the app can be installed with "Install app" or "Add to Home Screen".',
@@ -630,7 +630,7 @@
       shareTitle: 'App teilen', shareDesc: 'Schick die App an einen Freund oder lass jemanden neben dir den QR-Code scannen.',
       shareApp: 'App teilen', showQr: 'QR-Code zeigen',
       rulesTitle: 'Spielregeln', rulesDesc: 'Wie setzt du ein Zeichen, drehst den Würfel und gewinnst?', viewRules: 'Regeln ansehen',
-      bugTitle: 'Fehler melden', bugDesc: 'Funktioniert etwas nicht richtig? Sag Bescheid; Claude prüft jede Meldung.',
+      bugTitle: 'Fehler melden', bugDesc: 'Funktioniert etwas nicht richtig? Sag Bescheid; wir prüfen jede Meldung.',
       rulesHtml: '<li>Spieler 1 spielt mit <b>X</b>, Spieler 2 mit <b>O</b>. Du darfst dein Zeichen auf jedes leere Feld des Würfels setzen, auch auf die Mittelfelder.</li><li>Danach drehst du den Würfel genau einmal: eine Außenseite (<b>U D L R F B</b>) oder eine mittlere Schicht (<b>M E S</b>). Mit Shift oder den Tasten mit \' drehst du gegen den Uhrzeigersinn.</li><li>Anders überlegt? Solange du noch nicht gedreht hast, klickst du ein anderes leeres Feld, um dein Zeichen zu verschieben, oder dein Zeichen selbst, um es zurückzunehmen.</li><li>Drei in einer Reihe auf einer Seite gewinnt. Das wird erst geprüft, wenn die Drehung fertig ist. Haben beide Spieler eine Reihe? Dann gewinnt, wer gerade gedreht hat.</li><li>Alle 54 Felder voll ohne Reihe ist unentschieden. Im Turnier entscheidet dann eine Münze.</li><li>Zieh über den Bildschirm, um den Würfel von allen Seiten anzusehen.</li>',
       back: 'Zurück',
       shareIntro: 'Lass deinen Freund diesen Code mit der Handykamera scannen. Danach lässt sich die App über „App installieren“ oder „Zum Home-Bildschirm“ installieren.',
@@ -2464,7 +2464,7 @@
   // Reports go to a private-ish ntfy.sh mailbox. A scheduled Claude task on the owner's computer reads them,
   // separates real bugs from noise, and prepares fixes that the owner approves before they go live.
   const BUG_TOPIC = 'kke-bugs-q7Vt2mZx9KpR4wLs8NcY';
-  const APP_VERSION = '20261008164801'; // filled in by build.ps1
+  const APP_VERSION = '20261008165239'; // filled in by build.ps1
   const BUG_WAIT_MS = 2 * 60 * 1000;
 
   function setBugMessages(error, ok) {
