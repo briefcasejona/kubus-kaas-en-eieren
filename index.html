@@ -161,11 +161,34 @@
   .tp-card p { margin: 0; color: var(--muted); line-height: 1.45; }
   .tp-card label { display: flex; flex-direction: column; gap: 4px; color: var(--muted); font-size: 13px; }
   .tp-card label.chk { flex-direction: row; align-items: center; gap: 8px; color: var(--text); font-size: 14px; }
-  .tp-card input[type="text"], .tp-card select {
+  .tp-card textarea { resize: vertical; min-height: 4.5em; line-height: 1.4; }
+  .tp-card input[type="text"], .tp-card select, .tp-card textarea {
     font: inherit; font-size: 16px; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--line);
     background: var(--bg2); color: var(--text);
   }
-  .tp-card input:focus-visible, .tp-card select:focus-visible { outline: 2px solid var(--gold); outline-offset: 1px; }
+  .tp-card input:focus-visible, .tp-card select:focus-visible, .tp-card textarea:focus-visible { outline: 2px solid var(--gold); outline-offset: 1px; }
+
+  /* Home screen: the menu over a dimmed view of the cube */
+  #home {
+    position: fixed; inset: 0; z-index: 15; overflow-y: auto; background: rgba(10, 12, 18, .8);
+    padding: calc(20px + env(safe-area-inset-top, 0px)) 16px calc(24px + env(safe-area-inset-bottom, 0px));
+  }
+  #home[hidden], #home [hidden] { display: none; }
+  /* While the menu is open only the cube stays visible behind it */
+  body.home-open #top, body.home-open #moves, body.home-open #help, body.home-open #log, body.home-open #banner { visibility: hidden; }
+  .home-wrap { max-width: 920px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+  .home-title { margin: 8px 0 0; font-size: clamp(28px, 7vw, 44px); letter-spacing: .5px; text-align: center; text-wrap: balance; }
+  .home-title .x { color: var(--x); } .home-title .o { color: var(--o); }
+  .home-sub { margin: 0; text-align: center; color: var(--muted); }
+  .home-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 14px; }
+  .home-card .row { display: flex; gap: 8px; }
+  .home-card .row input { flex: 1; min-width: 0; font-family: ui-monospace, Consolas, monospace; letter-spacing: 3px; text-transform: uppercase; }
+  .home-card .or { color: var(--muted); font-size: 13px; text-align: center; }
+  .home-actions { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
+  .home-rules ol { margin: 0; padding-left: 20px; color: var(--muted); line-height: 1.55; display: flex; flex-direction: column; gap: 6px; }
+  .home-rules b { color: var(--text); }
+  .ok-note { color: #a8e6b4; margin: 0; }
+  .ok-note:empty { display: none; }
   #tCode { font-family: ui-monospace, Consolas, monospace; letter-spacing: 3px; text-transform: uppercase; }
   .tp-note { color: var(--warn); margin: 0; }
   .tp-note:empty { display: none; }
@@ -210,6 +233,7 @@
   <header>
     <h1>Kubus Kaas en Eieren <span class="x">X</span><span class="dot">·</span><span class="o">O</span></h1>
     <div class="head-actions">
+      <button type="button" id="menuBtn" hidden>Menu</button>
       <button type="button" id="tourBtn" hidden>Toernooi</button>
       <button type="button" id="newGame">Nieuw spel</button>
     </div>
@@ -254,6 +278,80 @@
 <div id="banner" hidden><div><h2 id="bannerText"></h2><button id="bannerNew">Opnieuw spelen</button></div></div>
 
 <div id="tourPanel" hidden><div class="tp-wrap" id="tourBody"></div></div>
+
+<div id="home" hidden>
+  <div class="home-wrap">
+    <h1 class="home-title">Kubus Kaas en Eieren <span class="x">X</span><span class="dot">·</span><span class="o">O</span></h1>
+    <p class="home-sub">Boter-kaas-en-eieren op een Rubiks kubus</p>
+    <p class="tp-note" id="homeNote"></p>
+
+    <div id="homeMain" class="home-grid">
+      <section class="tp-card home-card">
+        <h3>Op dit apparaat</h3>
+        <p>Met z'n tweeën om de beurt op één scherm.</p>
+        <button type="button" class="primary" id="hLocal">Spelen</button>
+      </section>
+      <section class="tp-card home-card" id="hOnlineCard">
+        <h3>Online 1-tegen-1</h3>
+        <p>Ieder op zijn eigen telefoon of computer. Start een spel en deel de code of link.</p>
+        <button type="button" class="primary" id="hHost">Spel starten</button>
+        <span class="or">of doe mee met een code</span>
+        <div class="row">
+          <input type="text" id="hCode" maxlength="6" placeholder="CODE" autocomplete="off" spellcheck="false" aria-label="Spelcode">
+          <button type="button" id="hJoin">Meedoen</button>
+        </div>
+      </section>
+      <section class="tp-card home-card" id="hTourCard">
+        <h3>Toernooi</h3>
+        <p>Knock-out met 8 of 16 spelers. Halve finales best of 3, finale best of 5.</p>
+        <button type="button" class="primary" id="hTour">Naar het toernooi</button>
+      </section>
+      <section class="tp-card home-card">
+        <h3>Spelregels</h3>
+        <p>Hoe zet je een teken, hoe draai je de kubus en wanneer win je?</p>
+        <button type="button" id="hRules">Bekijk de regels</button>
+      </section>
+      <section class="tp-card home-card" id="hBugCard">
+        <h3>Bug melden</h3>
+        <p>Werkt er iets niet zoals het hoort? Laat het weten; Claude bekijkt elke melding.</p>
+        <button type="button" id="hBug">Bug melden</button>
+      </section>
+    </div>
+
+    <section id="homeRules" class="tp-card home-rules" hidden>
+      <h3>Spelregels</h3>
+      <ol>
+        <li>Speler 1 speelt met <b>X</b>, speler 2 met <b>O</b>. Je mag op elk leeg vakje van de kubus je teken zetten, ook op de middelste.</li>
+        <li>Daarna draai je precies één keer aan de kubus: een buitenzijde (<b>U D L R F B</b>) of een middelste laag (<b>M E S</b>). Met Shift of de knoppen met ' draai je tegen de klok in.</li>
+        <li>Bedacht? Zolang je nog niet gedraaid hebt, klik je een ander leeg vakje om je teken te verplaatsen, of je teken zelf om het terug te nemen.</li>
+        <li>Drie op een rij op één zijde wint. Dat wordt pas gecontroleerd als de draai klaar is. Hebben beide spelers een rij? Dan wint wie net gedraaid heeft.</li>
+        <li>Alle 54 vakjes vol zonder rij is gelijkspel. In een toernooi beslist dan een munt.</li>
+        <li>Sleep over het scherm om de kubus van alle kanten te bekijken.</li>
+      </ol>
+      <div><button type="button" data-home="main">Terug</button></div>
+    </section>
+
+    <section id="homeBug" class="tp-card" hidden>
+      <h3>Bug melden</h3>
+      <p>Beschrijf zo precies mogelijk wat er misging. Claude bekijkt elke melding en lost echte fouten op. Zet er geen persoonlijke gegevens in.</p>
+      <label>Wat ging er mis?
+        <textarea id="bugText" maxlength="1000" rows="5" placeholder="Bijv. na een M-draai bleef mijn X op de verkeerde plek staan."></textarea></label>
+      <label>Wat deed je net daarvoor? (optioneel)
+        <textarea id="bugSteps" maxlength="500" rows="3" placeholder="Bijv. online spel, ik was O, net een vakje verplaatst."></textarea></label>
+      <p class="tp-note" id="bugError"></p>
+      <p class="ok-note" id="bugOk"></p>
+      <div class="home-actions" style="justify-content:flex-start">
+        <button type="button" class="primary" id="bugSend">Versturen</button>
+        <button type="button" data-home="main">Terug</button>
+      </div>
+    </section>
+
+    <div class="home-actions">
+      <button type="button" id="hInstall" hidden>App installeren</button>
+      <button type="button" id="hResume" hidden>Terug naar het spel</button>
+    </div>
+  </div>
+</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"></script>
@@ -747,6 +845,8 @@
   function showNote(text) {
     noteEl.textContent = text || '';
     noteEl.hidden = !text;
+    const homeNote = document.getElementById('homeNote');
+    if (homeNote) homeNote.textContent = text || '';
   }
 
   function rebuildLog() {
@@ -948,7 +1048,7 @@
   window.addEventListener('keydown', e => {
     if (e.ctrlKey || e.metaKey || e.altKey) return;
     if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT')) return;
-    if (!tourPanel.hidden) return;
+    if (!tourPanel.hidden || !homeEl.hidden) return;
     const k = e.key.toUpperCase();
     if (FACES[k]) { e.preventDefault(); makeMove(k, e.shiftKey); }
   });
@@ -1101,6 +1201,7 @@
     if (!keepNote) showNote('');
     mode = 'local';
     sync();
+    if (homeSupported()) showHome();
   }
 
   // 1-on-1: remember which side this browser played per code, so a reload can resume as the same player.
@@ -1139,10 +1240,10 @@
   }
 
   function renderNet() {
-    const show = (mode === 'local' || mode === 'p2p') && onlineSupported();
-    p2pPanel.hidden = !show;
-    if (!show) return;
+    // Starting or joining happens on the home screen; this bar only shows the game you're in.
     const inNet = mode === 'p2p' && !!net;
+    p2pPanel.hidden = !(inNet && onlineSupported());
+    if (p2pPanel.hidden) return;
     p2pStart.hidden = inNet;
     p2pInfo.hidden = !inNet;
     if (!inNet) return;
@@ -1209,6 +1310,7 @@
     const m = /^#([gt])-([A-Za-z0-9]{6})$/.exec(location.hash);
     if (!m || !onlineSupported()) return;
     const code = m[2].toUpperCase();
+    hideHome();
     if (m[1] === 'g') { joinInput.value = code; joinGame(); }
     else {
       openTourPanel();
@@ -1225,7 +1327,7 @@
   const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installPrompt = e; updateUI(); });
   window.addEventListener('appinstalled', () => { installPrompt = null; showNote(''); updateUI(); });
-  installBtn.addEventListener('click', async () => {
+  const installApp = async () => {
     if (installPrompt) {
       installPrompt.prompt();
       try { await installPrompt.userChoice; } catch (_) {}
@@ -1234,9 +1336,12 @@
     } else if (isIOS()) {
       showNote('Tik in Safari onderaan op de deelknop (vierkantje met pijl) en kies "Zet op beginscherm".');
     }
-  });
+  };
+  installBtn.addEventListener('click', installApp);
+  document.getElementById('hInstall').addEventListener('click', installApp);
   function renderInstall() {
     installBtn.hidden = !canShareLinks() || isStandalone() || !(installPrompt || isIOS());
+    document.getElementById('hInstall').hidden = installBtn.hidden;
   }
 
   if ('serviceWorker' in navigator && canShareLinks() && document.querySelector('link[rel="manifest"]')) {
@@ -1303,7 +1408,11 @@
     setHover(null);
     renderTour();
   }
-  function closeTourPanel() { tourPanel.hidden = true; }
+  function closeTourPanel() {
+    tourPanel.hidden = true;
+    // Back to the game while a tournament match is open, otherwise back to the menu.
+    if (!(mode === 'p2p' && net && net.kind === 'match') && homeSupported()) showHome();
+  }
 
   function subscribeTour() {
     relay.subscribe(tourTopic('state'), p => {
@@ -1543,7 +1652,7 @@
     if (tourView === 'menu') { renderTourMenu(); return; }
     const me = tourPlayerId;
     let html = `<div class="tp-head"><h2>Toernooi <code>${escapeHtml(tourCode || '')}</code></h2>
-      <div class="acts"><button type="button" data-act="copy">Kopieer code</button>${canShareLinks() ? '<button type="button" data-act="share">Deel link</button>' : ''}<button type="button" data-act="close">Terug naar de kubus</button></div></div>
+      <div class="acts"><button type="button" data-act="copy">Kopieer code</button>${canShareLinks() ? '<button type="button" data-act="share">Deel link</button>' : ''}<button type="button" data-act="close">Terug</button></div></div>
       <p class="tp-note" id="tNote">${escapeHtml(tourNoteText)}</p>`;
     if (!tour) {
       html += `<div class="tp-card"><p>Verbinden met het toernooi…</p></div>`;
@@ -1633,7 +1742,7 @@
   }
 
   function renderTourMenu() {
-    tourBody.innerHTML = `<div class="tp-head"><h2>Toernooi</h2><div class="acts"><button type="button" data-act="close">Terug naar de kubus</button></div></div>
+    tourBody.innerHTML = `<div class="tp-head"><h2>Toernooi</h2><div class="acts"><button type="button" data-act="close">Terug</button></div></div>
       <p class="tp-note" id="tNote">${escapeHtml(tourNoteText)}</p>
       <div class="tp-grid">
         <section class="tp-card">
@@ -1676,13 +1785,112 @@
   });
   window.addEventListener('keydown', e => { if (e.key === 'Escape' && !tourPanel.hidden) closeTourPanel(); });
 
+  // ---------- Home screen ----------
+  // The menu shown at start: play on one device, 1-on-1 online, tournament, rules, report a bug.
+  // Not used in the claude.ai version, which has its own signed-in seats.
+  const homeEl = document.getElementById('home');
+  const menuBtn = document.getElementById('menuBtn');
+  const homeSupported = () => !(window.claude && typeof window.claude.use === 'function');
+
+  function showHome(view) {
+    if (!homeSupported()) return;
+    for (const id of ['homeMain', 'homeRules', 'homeBug']) document.getElementById(id).hidden = true;
+    document.getElementById({ rules: 'homeRules', bug: 'homeBug' }[view] || 'homeMain').hidden = false;
+    const online = onlineSupported();
+    document.getElementById('hOnlineCard').hidden = !online;
+    document.getElementById('hTourCard').hidden = !online;
+    document.getElementById('hBugCard').hidden = !online;
+    // Offer to go back only when there is a game worth returning to.
+    document.getElementById('hResume').hidden = !(mode === 'p2p' || game.moves.length || game.marks !== EMPTY_MARKS);
+    homeEl.hidden = false;
+    document.body.classList.add('home-open');
+    setHover(null);
+    homeEl.scrollTop = 0;
+  }
+  function hideHome() { homeEl.hidden = true; document.body.classList.remove('home-open'); }
+
+  menuBtn.hidden = !homeSupported();
+  menuBtn.addEventListener('click', () => showHome());
+  homeEl.addEventListener('click', e => {
+    const el = e.target.closest('[data-home]');
+    if (el) showHome(el.dataset.home);
+  });
+  document.getElementById('hLocal').addEventListener('click', () => {
+    if (mode === 'p2p') { leaveNet(); mode = 'local'; }
+    showNote('');
+    hideHome();
+    newGame();
+  });
+  document.getElementById('hHost').addEventListener('click', () => { hideHome(); hostGame(); });
+  const homeJoin = () => {
+    const code = document.getElementById('hCode').value.trim().toUpperCase();
+    if (!/^[A-Z0-9]{6}$/.test(code)) { showNote('Vul de code van 6 tekens in die je tegenstander ziet.'); return; }
+    hideHome();
+    joinInput.value = code;
+    joinGame();
+  };
+  document.getElementById('hJoin').addEventListener('click', homeJoin);
+  document.getElementById('hCode').addEventListener('keydown', e => { if (e.key === 'Enter') homeJoin(); });
+  document.getElementById('hTour').addEventListener('click', () => { hideHome(); openTourPanel(); });
+  document.getElementById('hRules').addEventListener('click', () => showHome('rules'));
+  document.getElementById('hBug').addEventListener('click', () => { setBugMessages('', ''); showHome('bug'); });
+  document.getElementById('hResume').addEventListener('click', hideHome);
+
+  // ---------- Bug reports ----------
+  // Reports go to a private-ish ntfy.sh mailbox. A scheduled Claude task on the owner's computer reads them,
+  // separates real bugs from noise, and prepares fixes that the owner approves before they go live.
+  const BUG_TOPIC = 'kke-bugs-q7Vt2mZx9KpR4wLs8NcY';
+  const APP_VERSION = '20261008163220'; // filled in by build.ps1
+  const BUG_WAIT_MS = 2 * 60 * 1000;
+
+  function setBugMessages(error, ok) {
+    document.getElementById('bugError').textContent = error || '';
+    document.getElementById('bugOk').textContent = ok || '';
+  }
+
+  async function sendBug() {
+    const textEl = document.getElementById('bugText'), stepsEl = document.getElementById('bugSteps');
+    const text = textEl.value.replace(/\s+/g, ' ').trim();
+    const steps = stepsEl.value.replace(/\s+/g, ' ').trim();
+    if (text.length < 15) { setBugMessages('Beschrijf het probleem iets uitgebreider (minstens 15 tekens).', ''); return; }
+    const last = Number(store.get('kke-bug-last')) || 0;
+    if (Date.now() - last < BUG_WAIT_MS) { setBugMessages('Je hebt net al een melding gestuurd. Probeer het over een paar minuten opnieuw.', ''); return; }
+    const btn = document.getElementById('bugSend');
+    btn.disabled = true;
+    setBugMessages('', '');
+    const report = {
+      t: 'bug', text: text.slice(0, 1000), steps: steps.slice(0, 500), appVersion: APP_VERSION,
+      mode: mode === 'p2p' && net ? 'online-' + net.kind : mode, userAgent: navigator.userAgent.slice(0, 200),
+      time: new Date().toISOString(),
+    };
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 10000);
+    try {
+      const res = await fetch('https://ntfy.sh/' + BUG_TOPIC, { method: 'POST', body: JSON.stringify(report), signal: ctrl.signal });
+      if (res.status === 429) throw new Error('busy');
+      if (!res.ok) throw new Error('http');
+      store.set('kke-bug-last', Date.now());
+      textEl.value = ''; stepsEl.value = '';
+      setBugMessages('', 'Bedankt! Claude bekijkt je melding.');
+    } catch (e) {
+      setBugMessages(e && e.message === 'busy'
+        ? 'Er worden nu te veel meldingen verstuurd. Probeer het later opnieuw.'
+        : 'Versturen lukte niet. Controleer je internetverbinding en probeer het opnieuw.', '');
+    } finally {
+      clearTimeout(timer);
+      btn.disabled = false;
+    }
+  }
+  document.getElementById('bugSend').addEventListener('click', sendBug);
+
   // ---------- Start: online when the shared store is available, otherwise one device ----------
   function startLocal() {
     mode = 'local';
     document.getElementById('modeHelp').textContent = onlineSupported()
-      ? 'Speel samen op dit apparaat, of klik op "Online spel starten" en geef de code aan je tegenstander. Die opent dit bestand ook en vult de code in. Met "Toernooi" speel je met 8 of 16 spelers een knock-outtoernooi. Sleep om de kubus te bekijken.'
+      ? 'Via "Menu" kies je: samen op dit apparaat, online 1-tegen-1 of een toernooi. Sleep om de kubus te bekijken.'
       : 'Jullie spelen samen op dit apparaat. Sleep ergens om de kubus van alle kanten te bekijken.';
     sync();
+    if (homeSupported()) showHome();
   }
 
   async function startOnline() {
