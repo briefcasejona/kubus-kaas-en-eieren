@@ -459,7 +459,7 @@
       back: 'Terug',
       shareIntro: 'Laat je vriend deze code scannen met de camera van de telefoon. Daarna kan de app geïnstalleerd worden via "App installeren" of "Zet op beginscherm".',
       qrAria: 'QR-code met de link naar de app', shareTheLink: 'Deel de link', copyLink: 'Kopieer link',
-      bugIntro: 'Beschrijf zo precies mogelijk wat er misging. Claude bekijkt elke melding en lost echte fouten op. Zet er geen persoonlijke gegevens in.',
+      bugIntro: 'Beschrijf zo precies mogelijk wat er misging. Wij bekijken elke melding en lossen echte fouten op. Zet er geen persoonlijke gegevens in.',
       bugWhat: 'Wat ging er mis?', bugWhatPh: 'Bijv. na een M-draai bleef mijn X op de verkeerde plek staan.',
       bugSteps: 'Wat deed je net daarvoor? (optioneel)', bugStepsPh: 'Bijv. online spel, ik was O, net een vakje verplaatst.',
       send: 'Versturen', resume: 'Terug naar het spel',
@@ -522,7 +522,7 @@
       qrLoading: 'QR-code laden…', qrFailed: 'De QR-code kan nu niet laden. Deel de link hieronder.',
       bugTooShort: 'Beschrijf het probleem iets uitgebreider (minstens 15 tekens).',
       bugWait: 'Je hebt net al een melding gestuurd. Probeer het over een paar minuten opnieuw.',
-      bugThanks: 'Bedankt! Claude bekijkt je melding.', bugBusy: 'Er worden nu te veel meldingen verstuurd. Probeer het later opnieuw.',
+      bugThanks: 'Bedankt! Wij bekijken je melding.', bugBusy: 'Er worden nu te veel meldingen verstuurd. Probeer het later opnieuw.',
       bugFailed: 'Versturen lukte niet. Controleer je internetverbinding en probeer het opnieuw.',
     },
     en: {
@@ -547,7 +547,7 @@
       back: 'Back',
       shareIntro: 'Let your friend scan this code with their phone camera. Then the app can be installed with "Install app" or "Add to Home Screen".',
       qrAria: 'QR code with the link to the app', shareTheLink: 'Share the link', copyLink: 'Copy link',
-      bugIntro: "Describe as precisely as possible what went wrong. Claude reviews every report and fixes real bugs. Please don't include personal information.",
+      bugIntro: "Describe as precisely as possible what went wrong. We review every report and fix real bugs. Please don't include personal information.",
       bugWhat: 'What went wrong?', bugWhatPh: 'E.g. after an M turn my X stayed in the wrong place.',
       bugSteps: 'What were you doing just before? (optional)', bugStepsPh: 'E.g. online game, I was O, had just moved a mark.',
       send: 'Send', resume: 'Back to the game',
@@ -610,7 +610,7 @@
       qrLoading: 'Loading QR code…', qrFailed: "The QR code can't load right now. Share the link below.",
       bugTooShort: 'Please describe the problem in a bit more detail (at least 15 characters).',
       bugWait: 'You just sent a report. Try again in a few minutes.',
-      bugThanks: 'Thank you! Claude will look at your report.', bugBusy: 'Too many reports are being sent right now. Try again later.',
+      bugThanks: 'Thank you! We will look at your report.', bugBusy: 'Too many reports are being sent right now. Try again later.',
       bugFailed: "Sending didn't work. Check your internet connection and try again.",
     },
     de: {
@@ -635,7 +635,7 @@
       back: 'Zurück',
       shareIntro: 'Lass deinen Freund diesen Code mit der Handykamera scannen. Danach lässt sich die App über „App installieren“ oder „Zum Home-Bildschirm“ installieren.',
       qrAria: 'QR-Code mit dem Link zur App', shareTheLink: 'Link teilen', copyLink: 'Link kopieren',
-      bugIntro: 'Beschreibe möglichst genau, was schiefging. Claude prüft jede Meldung und behebt echte Fehler. Bitte keine persönlichen Daten angeben.',
+      bugIntro: 'Beschreibe möglichst genau, was schiefging. Wir prüfen jede Meldung und beheben echte Fehler. Bitte keine persönlichen Daten angeben.',
       bugWhat: 'Was ist schiefgegangen?', bugWhatPh: 'Z. B. nach einer M-Drehung blieb mein X an der falschen Stelle.',
       bugSteps: 'Was hast du direkt davor gemacht? (optional)', bugStepsPh: 'Z. B. Online-Spiel, ich war O, hatte gerade ein Zeichen verschoben.',
       send: 'Senden', resume: 'Zurück zum Spiel',
@@ -698,7 +698,7 @@
       qrLoading: 'QR-Code wird geladen…', qrFailed: 'Der QR-Code kann gerade nicht laden. Teile den Link unten.',
       bugTooShort: 'Beschreibe das Problem etwas ausführlicher (mindestens 15 Zeichen).',
       bugWait: 'Du hast gerade schon eine Meldung geschickt. Versuch es in ein paar Minuten noch einmal.',
-      bugThanks: 'Danke! Claude schaut sich deine Meldung an.', bugBusy: 'Gerade werden zu viele Meldungen gesendet. Versuch es später noch einmal.',
+      bugThanks: 'Danke! Wir schauen uns deine Meldung an.', bugBusy: 'Gerade werden zu viele Meldungen gesendet. Versuch es später noch einmal.',
       bugFailed: 'Senden hat nicht geklappt. Prüfe deine Internetverbindung und versuch es noch einmal.',
     },
   };
@@ -2464,7 +2464,7 @@
   // Reports go to a private-ish ntfy.sh mailbox. A scheduled Claude task on the owner's computer reads them,
   // separates real bugs from noise, and prepares fixes that the owner approves before they go live.
   const BUG_TOPIC = 'kke-bugs-q7Vt2mZx9KpR4wLs8NcY';
-  const APP_VERSION = '20261008165239'; // filled in by build.ps1
+  const APP_VERSION = '20261008165511'; // filled in by build.ps1
   const BUG_WAIT_MS = 2 * 60 * 1000;
 
   function setBugMessages(error, ok) {
