@@ -514,6 +514,8 @@
       connectingTour: 'Verbinden met het toernooi…',
       orgInfo: 'Geef de code <code>{code}</code> aan de spelers. Zij openen dit spel, kiezen <b>Toernooi</b> → <b>Meedoen</b> en vullen hun naam in.',
       notFull: 'Niet vol? Dan krijgen sommige spelers een vrije ronde en gaan ze direct door.',
+      fillBots: 'Lege plekken opvullen met computertegenstanders (Gevorderd)', fillBotsInfo: 'Wie tegen de computer speelt, speelt die wedstrijd gewoon op het eigen apparaat.',
+      startWithBots: 'Start toernooi: {n} spelers + {k} computer',
       startWith1: 'Start toernooi met 1 speler', startWithN: 'Start toernooi met {n} spelers',
       waitingStart: 'Je doet mee als <b>{name}</b>. Wachten tot de organisator het toernooi start…', tourFull: 'Dit toernooi is vol.',
       signingUp: 'Aanmelden als <b>{name}</b>…', playersCount: 'Spelers {n}/{size}', nobodyYet: 'Nog niemand', youTag: ' (jij)',
@@ -608,6 +610,8 @@
       connectingTour: 'Connecting to the tournament…',
       orgInfo: 'Give the code <code>{code}</code> to the players. They open this game, choose <b>Tournament</b> → <b>Join</b> and enter their name.',
       notFull: 'Not full? Then some players get a bye and go straight through.',
+      fillBots: 'Fill empty spots with computer opponents (Intermediate)', fillBotsInfo: 'Whoever faces the computer simply plays that match on their own device.',
+      startWithBots: 'Start tournament: {n} players + {k} computer',
       startWith1: 'Start tournament with 1 player', startWithN: 'Start tournament with {n} players',
       waitingStart: "You're in as <b>{name}</b>. Waiting for the organizer to start the tournament…", tourFull: 'This tournament is full.',
       signingUp: 'Signing up as <b>{name}</b>…', playersCount: 'Players {n}/{size}', nobodyYet: 'Nobody yet', youTag: ' (you)',
@@ -702,6 +706,8 @@
       connectingTour: 'Verbindung zum Turnier…',
       orgInfo: 'Gib den Spielern den Code <code>{code}</code>. Sie öffnen dieses Spiel, wählen <b>Turnier</b> → <b>Beitreten</b> und geben ihren Namen ein.',
       notFull: 'Nicht voll? Dann bekommen einige Spieler ein Freilos und sind direkt weiter.',
+      fillBots: 'Freie Plätze mit Computergegnern auffüllen (Fortgeschritten)', fillBotsInfo: 'Wer gegen den Computer spielt, spielt diese Partie einfach auf dem eigenen Gerät.',
+      startWithBots: 'Turnier starten: {n} Spieler + {k} Computer',
       startWith1: 'Turnier mit 1 Spieler starten', startWithN: 'Turnier mit {n} Spielern starten',
       waitingStart: 'Du spielst mit als <b>{name}</b>. Warte, bis der Organisator das Turnier startet…', tourFull: 'Dieses Turnier ist voll.',
       signingUp: 'Anmeldung als <b>{name}</b>…', playersCount: 'Spieler {n}/{size}', nobodyYet: 'Noch niemand', youTag: ' (du)',
@@ -2112,8 +2118,20 @@
     tour.rounds[r + 1][i >> 1][i % 2 === 0 ? 'a' : 'b'] = m.winner;
   }
 
+  // Organizer's choice in the lobby: fill empty spots with computer opponents (intermediate level).
+  let fillBots = true;
+
   function startTour() {
-    if ((tourRole !== 'org' && tourRole !== 'solo') || !tour || tour.phase !== 'lobby' || tour.players.length < 2) return;
+    if ((tourRole !== 'org' && tourRole !== 'solo') || !tour || tour.phase !== 'lobby') return;
+    if (tourRole === 'org' && fillBots) {
+      const taken = new Set(tour.players.map(p => p.name.toLowerCase()));
+      const names = BOT_NAMES.filter(n => !taken.has(n.toLowerCase()));
+      for (let i = names.length - 1; i > 0; i--) { const j = randomInt(i + 1); [names[i], names[j]] = [names[j], names[i]]; }
+      for (let i = 0; tour.players.length < tour.size && i < names.length; i++) {
+        tour.players.push({ id: 'bot' + makeCode(), name: names[i], ai: 'intermediate' });
+      }
+    }
+    if (tour.players.length < 2) return;
     const ids = tour.players.map(p => p.id);
     for (let i = ids.length - 1; i > 0; i--) { const j = randomInt(i + 1); [ids[i], ids[j]] = [ids[j], ids[i]]; }
     // Smallest bracket that fits everyone; empty spots become byes (that player goes straight through).
@@ -2208,7 +2226,10 @@
 
   // Spectating: anyone without a match to play right now can follow a live match, read-only.
   // A spectator only listens to the match channel and never sends anything to it.
-  const canSpectate = m => !!(tour && !tour.solo && tour.phase === 'running' && m.a && m.b && !m.winner &&
+  // Matches against a computer run only on the player's own device, so they can't be watched.
+  const isBot = id => !!(tour && (tour.players.find(p => p.id === id) || {}).ai);
+  const vsBot = matchId => { const loc = findMatch(matchId); return !!loc && (isBot(loc.m.a) || isBot(loc.m.b)); };
+  const canSpectate = m => !!(tour && !tour.solo && tour.phase === 'running' && m.a && m.b && !m.winner && !isBot(m.a) && !isBot(m.b) &&
     m.a !== tourPlayerId && m.b !== tourPlayerId && !myActiveMatch());
 
   async function watchMatch(id) {
@@ -2364,7 +2385,8 @@
 
   function afterTourChange() {
     if (tour && tourRole === 'player' && tour.players.some(p => p.id === tourPlayerId)) saveTourRole();
-    resolveAiMatches(); // solo tournament: settle computer-vs-computer matches right away
+    // Settle computer-vs-computer matches right away; the organizer shares the outcome with everyone.
+    if (resolveAiMatches() && tourRole === 'org') publishTour();
     tourTick();
     // Solo tournament: a coin decided a drawn game against the computer.
     if (mode === 'solo' && soloCtx.matchId) {
@@ -2422,8 +2444,13 @@
       let info;
       if (tourRole === 'org') {
         info = `<p>${t('orgInfo', { code: escapeHtml(tourCode) })}</p>
-          <p>${t('notFull')}</p>
-          <button type="button" class="primary" data-act="start" ${n < 2 ? 'disabled' : ''}>${n === 1 ? t('startWith1') : t('startWithN', { n })}</button>`;
+          <label class="chk"><input type="checkbox" id="tFillBots" ${fillBots ? 'checked' : ''}> ${t('fillBots')}</label>
+          <p>${t(fillBots ? 'fillBotsInfo' : 'notFull')}</p>
+          ${(() => {
+            const bots = fillBots ? Math.max(0, tour.size - n) : 0;
+            const label = bots ? t('startWithBots', { n, k: bots }) : n === 1 ? t('startWith1') : t('startWithN', { n });
+            return `<button type="button" class="primary" data-act="start" ${n + bots < 2 || n < 1 ? 'disabled' : ''}>${label}</button>`;
+          })()}`;
       } else if (inList) info = `<p>${t('waitingStart', { name })}</p>`;
       else if (n >= tour.size) info = `<p>${t('tourFull')}</p>`;
       else info = `<p>${t('signingUp', { name })}</p>`;
@@ -2550,12 +2577,15 @@
     else if (act === 'create') createTour();
     else if (act === 'join') joinTour();
     else if (act === 'start') startTour();
-    else if (act === 'play') (tour && tour.solo ? playSoloMatch : playMatch)(el.dataset.id);
+    else if (act === 'play') (vsBot(el.dataset.id) ? playSoloMatch : playMatch)(el.dataset.id); // against a computer: on this device
     else if (act === 'createSolo') createSoloTour();
     else if (act === 'watch') watchMatch(el.dataset.id);
     else if (act === 'copy') copyText(tourCode, el, t('copyCode'));
     else if (act === 'share') shareLink('t', tourCode, el, t('shareLinkBtn'));
     else if (act === 'leave') { leaveTour(); tourView = 'menu'; setTourNote(''); renderTour(); updateUI(); }
+  });
+  tourBody.addEventListener('change', e => {
+    if (e.target.id === 'tFillBots') { fillBots = e.target.checked; renderTour(); }
   });
   tourBody.addEventListener('keydown', e => {
     if (e.key !== 'Enter' || e.target.tagName !== 'INPUT') return;
@@ -2655,14 +2685,15 @@
 
   // Computer-vs-computer matches are decided at once, weighted by level (stronger usually wins, not always).
   function resolveAiMatches() {
-    if (!tour || !tour.solo || tour.phase !== 'running') return false;
+    // Solo tournaments decide them on this device; online ones only on the organizer's device (once).
+    if (!tour || (tourRole !== 'solo' && tourRole !== 'org') || tour.phase !== 'running') return false;
     const rank = id => AI_LEVELS.indexOf((tour.players.find(p => p.id === id) || {}).ai);
     const winChance = [0.5, 0.72, 0.88]; // by level difference
     let changed = false, again = true;
     while (again && tour.phase === 'running') {
       again = false;
       tour.rounds.forEach((rd, r) => rd.forEach((m, i) => {
-        if (m.winner || !m.a || !m.b || m.a === tourPlayerId || m.b === tourPlayerId) return;
+        if (m.winner || !m.a || !m.b || !isBot(m.a) || !isBot(m.b)) return;
         const diff = rank(m.a) - rank(m.b);
         const pA = diff >= 0 ? winChance[diff] : 1 - winChance[-diff];
         while (!m.winner) {
@@ -2817,7 +2848,7 @@
   // Reports go to a private-ish ntfy.sh mailbox. A scheduled Claude task on the owner's computer reads them,
   // separates real bugs from noise, and prepares fixes that the owner approves before they go live.
   const BUG_TOPIC = 'kke-bugs-q7Vt2mZx9KpR4wLs8NcY';
-  const APP_VERSION = '20261008200033'; // filled in by build.ps1
+  const APP_VERSION = '20261008201155'; // filled in by build.ps1
   const BUG_WAIT_MS = 2 * 60 * 1000;
 
   function setBugMessages(error, ok) {
