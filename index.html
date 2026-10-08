@@ -187,6 +187,10 @@
   .home-actions { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
   .home-rules ol { margin: 0; padding-left: 20px; color: var(--muted); line-height: 1.55; display: flex; flex-direction: column; gap: 6px; }
   .home-rules b { color: var(--text); }
+  .share-card { align-items: flex-start; }
+  .qr { background: #fff; border-radius: 12px; padding: 12px; width: min(240px, 100%); aspect-ratio: 1; display: grid; place-items: center; color: #12151e; }
+  .qr svg { width: 100%; height: auto; display: block; }
+  .share-link { margin: 0; font-family: ui-monospace, Consolas, monospace; font-size: 13px; color: var(--text); overflow-wrap: anywhere; user-select: text; }
   .ok-note { color: #a8e6b4; margin: 0; }
   .ok-note:empty { display: none; }
   #tCode { font-family: ui-monospace, Consolas, monospace; letter-spacing: 3px; text-transform: uppercase; }
@@ -306,6 +310,12 @@
         <p>Knock-out met 8 of 16 spelers. Halve finales best of 3, finale best of 5.</p>
         <button type="button" class="primary" id="hTour">Naar het toernooi</button>
       </section>
+      <section class="tp-card home-card" id="hShareCard">
+        <h3>App delen</h3>
+        <p>Stuur de app naar een vriend, of laat een vriend naast je de QR-code scannen.</p>
+        <button type="button" class="primary" id="hShare">Deel de app</button>
+        <button type="button" id="hShareQr">Toon QR-code</button>
+      </section>
       <section class="tp-card home-card">
         <h3>Spelregels</h3>
         <p>Hoe zet je een teken, hoe draai je de kubus en wanneer win je?</p>
@@ -329,6 +339,19 @@
         <li>Sleep over het scherm om de kubus van alle kanten te bekijken.</li>
       </ol>
       <div><button type="button" data-home="main">Terug</button></div>
+    </section>
+
+    <section id="homeShare" class="tp-card share-card" hidden>
+      <h3>App delen</h3>
+      <p>Laat je vriend deze code scannen met de camera van de telefoon. Daarna kan de app geïnstalleerd worden via "App installeren" of "Zet op beginscherm".</p>
+      <div class="qr" id="shareQr" role="img" aria-label="QR-code met de link naar de app"></div>
+      <p class="share-link"><span id="shareUrl"></span></p>
+      <p class="ok-note" id="shareOk"></p>
+      <div class="home-actions" style="justify-content:flex-start">
+        <button type="button" class="primary" id="shareSend">Deel de link</button>
+        <button type="button" id="shareCopy">Kopieer link</button>
+        <button type="button" data-home="main">Terug</button>
+      </div>
     </section>
 
     <section id="homeBug" class="tp-card" hidden>
@@ -1794,8 +1817,8 @@
 
   function showHome(view) {
     if (!homeSupported()) return;
-    for (const id of ['homeMain', 'homeRules', 'homeBug']) document.getElementById(id).hidden = true;
-    document.getElementById({ rules: 'homeRules', bug: 'homeBug' }[view] || 'homeMain').hidden = false;
+    for (const id of ['homeMain', 'homeRules', 'homeBug', 'homeShare']) document.getElementById(id).hidden = true;
+    document.getElementById({ rules: 'homeRules', bug: 'homeBug', share: 'homeShare' }[view] || 'homeMain').hidden = false;
     const online = onlineSupported();
     document.getElementById('hOnlineCard').hidden = !online;
     document.getElementById('hTourCard').hidden = !online;
@@ -1836,11 +1859,75 @@
   document.getElementById('hBug').addEventListener('click', () => { setBugMessages('', ''); showHome('bug'); });
   document.getElementById('hResume').addEventListener('click', hideHome);
 
+  // ---------- Sharing the app ----------
+  // Always shares the public web address, also from the downloaded file or an installed app.
+  const APP_URL = 'https://briefcasejona.github.io/kubus-kaas-en-eieren/';
+  const QR_LIB = 'https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js';
+  const shareOk = text => { document.getElementById('shareOk').textContent = text || ''; };
+
+  async function shareApp() {
+    const data = {
+      title: 'Kubus Kaas en Eieren',
+      text: 'Speel Kubus Kaas en Eieren met me: boter-kaas-en-eieren op een Rubiks kubus. Open de link en installeer de app:',
+      url: APP_URL,
+    };
+    if (navigator.share) {
+      try { await navigator.share(data); return; }
+      catch (e) { if (e && e.name === 'AbortError') return; }
+    }
+    // No share menu (most computers): copy the link and show the QR screen with the link visible.
+    showSharePage();
+    copyText(APP_URL, document.getElementById('shareCopy'), 'Kopieer link');
+    shareOk('Link gekopieerd. Plak hem in een bericht aan je vriend.');
+  }
+
+  let qrLoading = null;
+  function loadQrLib() {
+    if (window.qrcode) return Promise.resolve();
+    if (!qrLoading) {
+      qrLoading = new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = QR_LIB;
+        s.onload = resolve;
+        s.onerror = () => { qrLoading = null; reject(new Error('qr')); };
+        document.head.appendChild(s);
+      });
+    }
+    return qrLoading;
+  }
+
+  async function showSharePage() {
+    shareOk('');
+    document.getElementById('shareUrl').textContent = APP_URL;
+    showHome('share');
+    const box = document.getElementById('shareQr');
+    if (box.dataset.ready) return;
+    box.textContent = 'QR-code laden…';
+    try {
+      await loadQrLib();
+      const qr = window.qrcode(0, 'M');
+      qr.addData(APP_URL);
+      qr.make();
+      box.innerHTML = qr.createSvgTag({ cellSize: 6, margin: 2, scalable: true });
+      box.dataset.ready = '1';
+    } catch (_) {
+      box.textContent = 'De QR-code kan nu niet laden. Deel de link hieronder.';
+    }
+  }
+
+  document.getElementById('hShare').addEventListener('click', shareApp);
+  document.getElementById('hShareQr').addEventListener('click', showSharePage);
+  document.getElementById('shareSend').addEventListener('click', shareApp);
+  document.getElementById('shareCopy').addEventListener('click', e => {
+    copyText(APP_URL, e.currentTarget, 'Kopieer link');
+    shareOk('Link gekopieerd.');
+  });
+
   // ---------- Bug reports ----------
   // Reports go to a private-ish ntfy.sh mailbox. A scheduled Claude task on the owner's computer reads them,
   // separates real bugs from noise, and prepares fixes that the owner approves before they go live.
   const BUG_TOPIC = 'kke-bugs-q7Vt2mZx9KpR4wLs8NcY';
-  const APP_VERSION = '20261008150218'; // filled in by build.ps1
+  const APP_VERSION = '20261008151504'; // filled in by build.ps1
   const BUG_WAIT_MS = 2 * 60 * 1000;
 
   function setBugMessages(error, ok) {

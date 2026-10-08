@@ -1,10 +1,11 @@
 // Service worker: lets the installed app start without a connection and load fast.
 // The page itself is fetched network-first, so a new version reaches players on their next start.
-// 20261008150218 is filled in by build.ps1 on every build.
-const CACHE = 'kubus-kaas-en-eieren-20261008150218';
+// 20261008151504 is filled in by build.ps1 on every build.
+const CACHE = 'kubus-kaas-en-eieren-20261008151504';
 const LIBS = [
   'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js',
   'https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js',
+  'https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js',
 ];
 const LOCAL = ['./', 'index.html', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png', 'favicon-32.png'];
 
